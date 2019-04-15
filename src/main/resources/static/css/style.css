@@ -1,0 +1,68 @@
+
+nav.navbar {
+	    background-color: #337ab7 !important;
+}
+
+nav.navbar a {
+	color: white !important;
+}
+
+#search-form table {width: 100%}
+
+#search-form span {font-style: italic}
+
+#search-form input[type="number"] {
+	max-width: 20%
+}
+
+#resultsBlock div.rule-list button {
+	text-align: left;
+}
+
+#resultsBlock div.rule-list button:before {
+	font-family: "Glyphicons Halflings";
+    content: "\e114";
+    
+    margin-right: 15px;
+}
+
+#resultsBlock div.rule-list button.collapsed:before  {
+	content: "\e080";
+}
+
+.popup_content, .popup-rule {
+    padding: 0 10px;
+    background: #337ab7;
+    unset !important;
+    color: white;
+}
+
+.ui-dialog-titlebar {
+}
+
+.popup-rule pre {
+	height: 95%;
+}
+
+.wrapper {
+  min-height: 100%;
+  margin-bottom: 50px;
+}
+
+footer {
+   position: fixed;
+   left: 0;
+   bottom: 0;
+   width: 100%;
+   background-color: #337ab7;
+   color: white;
+   text-align: center;
+}
+
+nav ul.nav {
+	float: right;
+}
+
+nav ul.nav li.active a {
+	color: #337ab7 !important;
+}
