@@ -3,16 +3,12 @@ $(document).ready(
         $('#search-form #knowledgeBase')
             .change(
                 function() {
+                    knowledge_base = $("#knowledgeBase").val();
                     $
                         .ajax({
-                            type: "POST",
+                            type: "GET",
                             contentType: "application/json",
-                            url: "/api/rule/predicates",
-                            data: {
-                                knowledge_base: $(
-                                        "#knowledgeBase")
-                                    .val()
-                            },
+                            url: "/api/rules/" + knowledge_base + "/predicates",
                             dataType: 'json',
                             cache: false,
                             timeout: 600000,
@@ -39,12 +35,65 @@ $(document).ready(
                 });
 
         $("#search-form").submit(function(event) {
-
-            // stop submit the form, we will post it manually.
             event.preventDefault();
-
             search_rules_submit();
+        });
 
+        $("#results-table").on("submit", ".editable form", function(e) {
+            e.preventDefault();
+            
+            var params = {}
+            params["qualityEvaluation"] = parseInt(this.elements["qualityEvaluation"].value);
+            row_idx = parseInt(this.elements["rowIdx"].value);
+            column_idx = parseInt(this.elements["columnIdx"].value);
+
+            table = $("#results-table").DataTable();
+            $.ajax({
+                type: "PUT",
+                contentType: "application/json",
+                url: this.attributes['action'].value,
+                data: JSON.stringify(params),
+                dataType: 'json',
+                cache: false,
+                timeout: 600000,
+                success: function(modified_rule) {
+                    cell_data = table.cell(row_idx, column_idx).data(modified_rule.qualityEvaluation).draw();
+                },
+                error: function(e) {
+                    cell_data = table.cell(row_idx, column_idx).data();
+                    table.cell(row_idx, column_idx).data(cell_data).draw();
+                    $('#appMsg').html('<div class="alert alert-info">Error. Cannot update rule.</div>');
+                }
+            });
+        });
+
+        $("#results-table").on("click", "form button[value='Cancel']", function() {
+            table = $("#results-table").DataTable();
+            var form = this.form;
+            row_idx = parseInt(form.elements["rowIdx"].value);
+            column_idx = parseInt(form.elements["columnIdx"].value);
+            cell_data = table.cell(row_idx, column_idx).data();
+            table.cell(row_idx, column_idx).data(cell_data).draw();
+        });
+
+        $("#results-table").on("click", "a.popup-opener", function() {
+            rule_id = $(this).data('ruleId');
+            $("#popup-rule-" + rule_id).dialog("open");
+        });
+
+        $("#results-table").on("click", "td.editable", function() {
+            $(this).addClass('active');
+            var table = $("#results-table").DataTable();
+            cell_edit = this;
+            idx = table.cell(this).index();
+            row_data = table.rows(idx.row).data();
+
+            form_elm = add_input_elm(idx, row_data[0].ruleId, row_data[0].qualityEvaluation);
+            $(this).html(form_elm);
+        });
+
+        $("#results-table").on("click", "form", function(e) {
+            e.stopPropagation();
         });
 
     });
@@ -58,118 +107,137 @@ function search_rules_submit() {
     search["humanConfidenceFrom"] = $("#humanConfidenceFrom").val();
     search["humanConfidenceTo"] = $("#humanConfidenceTo").val();
 
-     $("#btn-search").prop("disabled", true);
+    $("#btn-search").prop("disabled", true);
 
     $.ajax({
         type: "POST",
         contentType: "application/json",
-        url: "/api/rule",
+        url: "/api/rules",
         data: JSON.stringify(search),
         dataType: 'json',
         cache: false,
         timeout: 600000,
         success: function(data) {
-        	$('#appMsg').html('');
+            $('#appMsg').html('');
             $('#resultsBlock').show();
             $("#btn-search").prop("disabled", false);
-            
-            var table = $('#results-table').DataTable({
-            	destroy:true,
-                data: data,
-                "columns": [{
-                    data: null,
-                    defaultContent: '',
-                    className: 'select-checkbox',
-                    orderable: false
-                }, {
-                    "data": "ruleType",
-                    className: "dt-center",
-                    "render": function(data, type, row, meta) {
-                        if (type === 'display') {
-                        	if(data == true) {
-                        		data = '+';
-                        	} else {
-                        		data = '-';
-                        	}
-                        }
 
-                        return data;
-                    }
-                }, {
-                    "data": "premise",
-                    "render": function(data, type, row, meta) {
-                        if (type === 'display') {
-                        	if (row.ruleType == true) {
-                                data = trim_prefix(row.premise) + ' \u21D2 ' +
-                                    trim_prefix(row.conclusion);
-                            } else {
-                                data = trim_prefix(row.premise) + ' \u0026	' +
-                                    trim_prefix(row.conclusion) + ' \u21D2 ' +
-                                    ' \u22A5 ';
+            if ($.fn.dataTable.isDataTable("#results-table")) {
+                var table = $("#results-table").DataTable();
+                table.clear();
+                table.rows.add(data);
+                table.draw();
+            } else {
+                var table = $('#results-table').DataTable({
+                    //                	destroy:true,
+                    fixedHeader: true,
+                    data: data,
+                    "columns": [{
+                        data: null,
+                        defaultContent: '',
+                        className: 'select-checkbox',
+                        orderable: false
+                    }, {
+                        "data": "ruleType",
+                        className: "dt-center",
+                        "render": function(data, type, row, meta) {
+                            if (type === 'display') {
+                                if (data == true) {
+                                    data = '+';
+                                } else {
+                                    data = '-';
+                                }
                             }
-                            data = '<a class="popup-opener" data-rule-id="' + row.ruleId + '" href="#">' + data + '</a>';
-                        }
 
-                        return data;
-                    }
-                }, {
-                    "data": "humanConfidence",
-                    className: "dt-center",
-                    "render": function(data, type, row, meta) {
-                        if (type === 'display') {
-                            data = '<a href="/instance/sample?rule_id=' + row.ruleId + '" >' + data + '</a>';
+                            return data;
                         }
+                    }, {
+                        "data": "premise",
+                        "render": function(data, type, row, meta) {
+                            if (type === 'display') {
+                                if (row.ruleType == true) {
+                                    data = trim_prefix(row.premise) + ' \u21D2 ' +
+                                        trim_prefix(row.conclusion);
+                                } else {
+                                    data = trim_prefix(row.premise) + ' \u0026	' +
+                                        trim_prefix(row.conclusion) + ' \u21D2 ' +
+                                        ' \u22A5 ';
+                                }
+                                data = '<a class="popup-opener" data-rule-id="' + row.ruleId + '" href="#">' + data + '</a>';
+                            }
 
-                        return data;
-                    }
-                }, {
-                    "data": "humanConfidence",
-                    className: "dt-center"
-                }, {
-                    "data": "humanConfidence",
-                    className: "dt-center"
-                }, {
-                    "data": "ruleId",
-                    className: "dt-center",
-                    "render": function(data, type, row, meta) {
-                        if (type === 'display') {
-                            data = '<a class="btn btn-info" role="button" href="/instance/all?rule_id=' + data + '" >Get instances</a>';
+                            return data;
                         }
+                    }, {
+                        "data": "qualityEvaluation",
+                        className: "dt-center editable",
+                    }, {
+                        "data": "humanConfidence",
+                        className: "dt-center",
+                        "render": function(data, type, row, meta) {
+                            if (type === 'display') {
+                                data = '<a href="/instance/sample?rule_id=' + row.ruleId + '" >' + data + '</a>';
+                            }
 
-                        return data;
-                    }
-                }],
-                select: {
-                    style: 'multi+shift',
-                    selector: 'td:first-child'
-                },
-                dom: 'Bfrtip',
-                buttons:  [
-                	'selectAll',
-                    'selectNone',
-                    {
-                        text: 'JSON Export',
-                        action: function () {
-                        	if(table.rows( { selected: true } ).count() == 0) {
-                        		$('#appMsg').html('<div class="alert alert-info">There is no selected rows.</div>');
-                        	} else {
-                        		var export_data = [];
-                            	table.rows( { selected: true } ).every( function () {
-                            		export_data.push(this.data());
-                            	} );
-                                $.fn.dataTable.fileSave(
-                                    new Blob( [ JSON.stringify( export_data, null, 4 ) ] ),
-                                    'selected_export.json'
-                                );
-                        	}
+                            return data;
                         }
+                    }, {
+                        "data": "computedConfidence",
+                        className: "dt-center",
+                        "render": function(data, type, row, meta) {
+                            if (type === 'display') {
+                                data = parseFloat(Math.round(data * 100) / 100).toFixed(2);;
+                            }
+
+                            return data;
+                        }
+                    }, {
+                        "data": "ruleId",
+                        className: "dt-center",
+                        "render": function(data, type, row, meta) {
+                            if (type === 'display') {
+                                data = '<a class="btn btn-info" role="button" href="/instance/all?rule_id=' + data + '" >Get instances</a>';
+                            }
+
+                            return data;
+                        }
+                    }],
+                    select: {
+                        style: 'multi+shift',
+                        selector: 'td:first-child'
                     },
-                    
-                ],
-                "pagingType": "simple_numbers",
-                "pageLength": 25,
-            });
-            
+                    dom: 'Bfrtip',
+                    buttons: [
+                        'selectAll',
+                        'selectNone',
+                        {
+                            text: 'JSON Export',
+                            action: function() {
+                                if (table.rows({
+                                        selected: true
+                                    }).count() == 0) {
+                                    $('#appMsg').html('<div class="alert alert-info">There is no selected rows.</div>');
+                                } else {
+                                    var export_data = [];
+                                    table.rows({
+                                        selected: true
+                                    }).every(function() {
+                                        export_data.push(this.data());
+                                    });
+                                    $.fn.dataTable.fileSave(
+                                        new Blob([JSON.stringify(export_data, null, 4)]),
+                                        'selected_export.json'
+                                    );
+                                }
+                            }
+                        },
+
+                    ],
+                    "pagingType": "simple_numbers",
+                    "pageLength": 25,
+                });
+            }
+
             var html = '';
             var rules = new Object();
             $.each(data, function(k, v) {
@@ -178,17 +246,6 @@ function search_rules_submit() {
                     '<pre>' + JSON.stringify(v, null, 4) + '</pre>' +
                     '</section>';
                 rules[v.ruleId] = v;
-
-//                if (v.ruleType == true) {
-//                    data[k].content = trim_prefix(v.premise) + ' \u21D2 ' +
-//                        trim_prefix(v.conclusion);
-//                    data[k].type = '+';
-//                } else {
-//                    data[k].content = trim_prefix(v.premise) + ' \u0026	' +
-//                        trim_prefix(v.conclusion) + ' \u21D2 ' +
-//                        ' \u22A5 ';
-//                    data[k].type = '-';
-//                }
             });
 
             $('#rule-details').html(html);
@@ -217,9 +274,6 @@ function search_rules_submit() {
                     duration: 100
                 }
             });
-            $(".popup-opener").on("click", function() {
-                $("#popup-rule-" + $(this).data("ruleId")).dialog("open");
-            });
 
 
         },
@@ -239,4 +293,18 @@ function search_rules_submit() {
 function trim_prefix(str) {
     p1 = "http://dbpedia.org/ontology/";
     return str.replace(new RegExp(p1, 'g'), "");
+}
+
+function add_input_elm(idx, id, value) {
+    var html = "<div>";
+    html += "<form id='form-rule-edit-" + id + "' action='/api/rules/" + id + "' method='put'>";
+    html += "<input id='ejbeatycelledit' name='qualityEvaluation' type='number' min='1' max='5' value='" + value + "'></input>";
+    html += "<button type='submit' class='btn btn-primary btn-sm' value='OK'>OK</button>";
+    html += "<button type='button' class='btn btn-secondary btn-sm' value='Cancel'>Cancel</button>";
+    html += '<input type="hidden" name="rowIdx" value="' + idx.row + '">';
+    html += '<input type="hidden" name="columnIdx" value="' + idx.column + '">';
+    html += '</form>';
+    html += "</div>";
+
+    return html;
 }

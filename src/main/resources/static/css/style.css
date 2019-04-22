@@ -66,3 +66,25 @@ nav ul.nav {
 nav ul.nav li.active a {
 	color: #337ab7 !important;
 }
+
+
+td.editable.active {
+	padding: 0;
+}
+
+td.editable.active div {
+	padding: 8px 10px;
+}
+
+td.editable.active form {
+	margin: 0;
+}
+
+td.editable.active form input {
+	display: block;
+	margin: 0 auto;
+}
+
+td.editable.active form button {
+	margin: 3px;
+}

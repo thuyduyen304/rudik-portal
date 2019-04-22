@@ -8,6 +8,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
@@ -18,7 +19,7 @@ import com.rudik.form.SearchForm;
 import com.rudik.model.Rule;
 
 @RestController
-@RequestMapping(value = "/api/rule")
+@RequestMapping(value = "/api/rules")
 public class RuleRestController {
 	private final Logger LOG = LoggerFactory.getLogger(getClass());
 
@@ -28,9 +29,9 @@ public class RuleRestController {
 		this.ruleDAL = ruleDAL;
 	}
 	
-	@PostMapping("/predicates")
+	@RequestMapping("/{knowledge_base}/predicates")
 	public List<String> getPredicateList(
-            @RequestBody String knowledge_base) {
+			@PathVariable String knowledge_base) {
 		return ruleDAL.getAllPredicates(knowledge_base);
 	}
 	
@@ -81,5 +82,13 @@ public class RuleRestController {
     	}
     	
 		return ruleDAL.getRulesByCriteria(criteria);
+	}
+	
+	@PutMapping("/{id}")
+	public Rule updateRule(@RequestBody Rule changes, @PathVariable(value="id") String id) {
+		Rule rule = new Rule();
+		rule = ruleDAL.updateQualityEvaluation(id, changes);
+
+		return rule;
 	}
 }

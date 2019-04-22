@@ -87,6 +87,17 @@ public class RuleDALImpl implements RuleDAL {
 		System.out.println(query); 
 		return mongoTemplate.find(query, Rule.class);
 	}
+
+	@Override
+	public Rule updateQualityEvaluation(String rule_id, Rule changes) {
+		
+		Query query = new Query();
+		query.addCriteria(Criteria.where("ruleId").is(rule_id));
+		Rule rule = mongoTemplate.findOne(query, Rule.class);
+		rule.setQualityEvaluation(changes.getQualityEvaluation());
+		mongoTemplate.save(rule);
+		return rule;
+	}
 	
 	
 

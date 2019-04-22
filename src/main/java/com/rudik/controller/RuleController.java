@@ -25,7 +25,7 @@ public class RuleController {
 	@Autowired
 	private RuleDAL ruleDAL;
     
-    @GetMapping(value = "/rule/search")
+    @GetMapping(value = {"/", "/rule/search"})
     public String showSearchForm(Model model) {
     	model.addAttribute("searchForm", new SearchForm());
         model.addAttribute("knowledgeBases", ruleDAL.getAllKnowledgeBase());

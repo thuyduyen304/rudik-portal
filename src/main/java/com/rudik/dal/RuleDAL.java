@@ -8,7 +8,7 @@ import com.rudik.model.Rule;
 public interface RuleDAL {
 	List<Rule> getAllRules();
 
-	Rule getRuleById(String userId);
+	Rule getRuleById(String ruleId);
 
 	Rule addNewRule(Rule rule);
 	
@@ -19,5 +19,7 @@ public interface RuleDAL {
 	List<String> getAllPredicates(String knowledge_base);
 	
 	List<Rule> getRulesByCriteria(List<HashMap<String, Object>> criteria);
+	
+	Rule updateQualityEvaluation(String rule_id, Rule changes);
 
 }

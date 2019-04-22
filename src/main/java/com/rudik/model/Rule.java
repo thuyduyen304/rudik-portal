@@ -49,6 +49,12 @@ public class Rule {
 	@Field("configuration")
 	private List<Configuration> configuration;
 	
+	@Field("computed_confidence")
+	private Double computedConfidence;
+	
+	@Field("quality_evaluation")
+	private Short qualityEvaluation;
+	
 	public void setSparqlEndpoint(String endpoint) {
 		sparqlEndpoint = endpoint;
 	}
@@ -152,6 +158,22 @@ public class Rule {
     public void setPremise(String premise) {
     	this.premise = premise;
     }
+    
+    public void setComputedConfidence(Double computed_confidence) {
+		this.computedConfidence = computed_confidence;
+	}
+	
+	public Double getComputedConfidence() {
+		return computedConfidence;
+	}
+	
+	public void setQualityEvaluation(Short quality_evaluation) {
+		this.qualityEvaluation = quality_evaluation;
+	}
+	
+	public Short getQualityEvaluation() {
+		return qualityEvaluation;
+	}
 
     @Override
     public String toString() 
@@ -160,7 +182,7 @@ public class Rule {
             + predicate 
             + ", premise="
             + premise 
-            + ", rule_type="
-            + ruleType + "]"; 
+            + ", qualityEvaluation="
+            + qualityEvaluation + "]"; 
     } 
 }
