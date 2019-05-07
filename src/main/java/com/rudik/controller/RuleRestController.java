@@ -15,7 +15,9 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.rudik.dal.RuleDAL;
 import com.rudik.dal.RuleRepository;
+import com.rudik.form.AddForm;
 import com.rudik.form.SearchForm;
+import com.rudik.model.Atom;
 import com.rudik.model.Rule;
 
 @RestController
@@ -90,5 +92,126 @@ public class RuleRestController {
 		rule = ruleDAL.updateQualityEvaluation(id, changes);
 
 		return rule;
+	}
+	
+	@RequestMapping("add-rule")
+	public List<HashMap<String, Rule>> addRule(
+			@RequestBody AddForm addForm) {
+
+		Rule rule = new Rule();
+		
+		List<HashMap<String, Object>> criteria = new ArrayList<HashMap<String, Object>>();
+		if(!addForm.getKnowledgeBase().equals("none")) {
+    		criteria.add(new HashMap<String, Object>()
+			{{
+			     put("field", "knowledgeBase");
+			     put("op", "=");
+			     put("value", addForm.getKnowledgeBase());
+			}});
+  	}
+  	if(!addForm.getPredicate().equals("none")) {
+  		criteria.add(new HashMap<String, Object>()
+		{{
+		     put("field", "predicate");
+		     put("op", "=");
+		     put("value", addForm.getPredicate());
+		}});
+  	}
+  	if(addForm.getRuleType() != -1) {
+  		criteria.add(new HashMap<String, Object>()
+		{{
+		     put("field", "ruleType");
+		     put("op", "=");
+		     put("value", (addForm.getRuleType() == 1));
+		}});
+  	}
+  	if(addForm.getPremise() != "") {
+  		criteria.add(new HashMap<String, Object>()
+		{{
+		     put("field", "premise");
+		     put("op", "=");
+		     put("value", addForm.getPremise());
+		}});
+  	}
+  	
+  	List<Rule> rules = ruleDAL.getRulesByCriteria(criteria);
+		
+  	if (!rules.isEmpty()) {
+  		List<HashMap<String, Rule>> exist_rule = new ArrayList<HashMap<String, Rule>>();
+  		exist_rule.add(new HashMap<String, Rule>()
+  		{{
+  			put("exist", rules.get(0));
+  		}});
+  		
+  		return exist_rule;
+  	}
+		
+		// rule type
+		if (addForm.getRuleType() == 1) {
+			rule.setRuleType(true);
+		}
+		else if (addForm.getRuleType() == 0) {
+			rule.setRuleType(false);
+		}
+		
+		// Knowledge Base
+		if(!addForm.getKnowledgeBase().equals("none")) {
+			rule.setKnowledgeBase(addForm.getKnowledgeBase());
+		}
+		
+		// Premise
+		if(addForm.getPremise() != "") {
+			String premise = addForm.getPremise();
+			rule.setPremise(premise);
+			String[] pre = premise.split("&"); 
+			String subject = "";
+			String object = "";
+			String predicate = "";
+			Atom triple = new Atom(subject, predicate, object);
+			List<Atom> premiseTriples = new ArrayList<Atom>();
+			for (int j = 0; j < pre.length; j++) {
+				subject = pre[j].trim().replaceAll(".*\\(|\\).*", "").split(",")[0];
+				object = pre[j].trim().replaceAll(".*\\(|\\).*", "").split(",")[1];
+				predicate = pre[j].trim().split("\\(")[0];
+				triple = new Atom(subject, predicate, object);
+				premiseTriples.add(triple);
+			}
+			
+			rule.setPremiseTriples(premiseTriples);
+		}
+		
+		// Predicate
+		if(addForm.getPredicate() != "") {
+			String predicate = addForm.getPredicate();
+			rule.setPredicate(predicate);
+    	
+    	Atom triple = new Atom("subject", predicate, "object");
+    	rule.setConclusionTriple(triple);
+    	rule.setConclusion(predicate + "(subject,object)");
+		}
+		
+		// Human Confidence
+		if(addForm.getHumanConfidence() != null) {
+			rule.setHumanConfidence(addForm.getHumanConfidence());
+		}
+		
+		// Quality Evaluation
+		if(addForm.getQualityEvaluation() != null) {
+			rule.setQualityEvaluation(addForm.getQualityEvaluation());
+		}
+		
+		// Computed Confidence
+		if(addForm.getComputedConfidence() != null) {
+			rule.setComputedConfidence(addForm.getComputedConfidence());
+		}
+		
+		List<HashMap<String, Rule>> new_rule = new ArrayList<HashMap<String, Rule>>();
+		new_rule.add(new HashMap<String, Rule>()
+		{{
+			put("new", ruleDAL.addNewRule(rule));
+		}});
+		
+		return new_rule;
+		
 	}
 }

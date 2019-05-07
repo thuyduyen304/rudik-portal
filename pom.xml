@@ -76,6 +76,12 @@
 		    <artifactId>rule_miner</artifactId>
 		    <version>0.0.1-SNAPSHOT</version>
 		</dependency>
+		
+		<dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-security</artifactId>
+            <version>1.5.9.RELEASE</version>
+        </dependency>
 				
 	</dependencies>
 

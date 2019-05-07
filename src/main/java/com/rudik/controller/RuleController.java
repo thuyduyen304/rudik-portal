@@ -14,8 +14,10 @@ import java.util.Map;
 import javax.validation.Valid;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.access.annotation.Secured;
 
 import com.rudik.dal.*;
+import com.rudik.form.AddForm;
 import com.rudik.form.SearchForm;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.ObjectWriter;
@@ -65,6 +67,46 @@ public class RuleController {
         return "rule/searchForm";
     }
     
+    //@Secured({"ROLE_ADMIN"})
+    @GetMapping(value = "/rule/add")
+    public String showAddForm(Model model) {
+    	model.addAttribute("addForm", new AddForm());
+    	model.addAttribute("knowledgeBases", ruleDAL.getAllKnowledgeBase());
+    	Map<Integer, String> ruleTypes = new HashMap<Integer, String>() {{
+      	put(-1, "--None--");
+          put(0, "Negative");
+          put(1, "Positive");
+      }};
+      model.addAttribute("ruleTypes", ruleTypes);
+      
+    	return "rule/addForm";
+    }
     
+    @PostMapping(value = "/rule/add")
+    public String submitAddForm(@Valid @ModelAttribute("addForm")AddForm addForm, 
+    	      BindingResult result, ModelMap model) {
+				ObjectWriter  obj = new ObjectMapper().writer().withDefaultPrettyPrinter();
+				Map<String, Object> criteria = new HashMap<String, Object>();
+				
+				if(addForm.getRuleType() != -1) {
+					criteria.put("ruleType", (addForm.getRuleType() == 1));
+				}
+				
+				Map<String, String> rules = new HashMap<String, String>();
+				  
+				model.addAttribute("rules", rules);
+				
+				model.addAttribute("knowledgeBases", ruleDAL.getAllKnowledgeBase());
+				
+				
+				Map<Integer, String> ruleTypes = new HashMap<Integer, String>() {{
+					put(-1, "--None--");
+				    put(0, "Negative");
+				    put(1, "Positive");
+				}};
+				model.addAttribute("ruleTypes", ruleTypes);
+				
+				return "rule/addForm";
+    }
 
 }
