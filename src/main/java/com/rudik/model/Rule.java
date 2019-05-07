@@ -55,6 +55,25 @@ public class Rule {
 	@Field("quality_evaluation")
 	private Short qualityEvaluation;
 	
+	@Field("source")
+	private String source;
+	
+	public Rule() {
+		
+	}
+	
+	public Rule(String source) {
+		this.source = source;
+	}
+	
+	public void setSource(String source) {
+		this.source = source;
+	}
+	
+	public String getSource() {
+		return this.source;
+	}
+	
 	public void setSparqlEndpoint(String endpoint) {
 		sparqlEndpoint = endpoint;
 	}
@@ -185,4 +204,16 @@ public class Rule {
             + ", qualityEvaluation="
             + qualityEvaluation + "]"; 
     } 
+    
+    @Override
+    public int hashCode() {
+    	final int prime = 31;
+		int result = 1;
+//		result = prime * result + ((knowledgeBase == null) ? 0 : knowledgeBase.hashCode());
+//		result = prime * result + ((source == null) ? 0 : source.hashCode());
+//		result = prime * result + ((predicate == null) ? 0 : predicate.hashCode());
+		result = prime * result + ((premiseTriples == null || premiseTriples.size() == 0) ? 0 : premiseTriples.hashCode());
+
+		return result;
+    }
 }

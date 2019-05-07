@@ -65,6 +65,18 @@
 		    <version>5.1.5.RELEASE</version>
 		</dependency> -->
 		
+		<dependency>
+		    <groupId>org.apache.commons</groupId>
+		    <artifactId>commons-csv</artifactId>
+		    <version>1.6</version>
+		</dependency>
+		
+		<dependency>
+		    <groupId>asu.edu</groupId>
+		    <artifactId>rule_miner</artifactId>
+		    <version>0.0.1-SNAPSHOT</version>
+		</dependency>
+				
 	</dependencies>
 
 	<build>
@@ -72,6 +84,10 @@
 			<plugin>
 				<groupId>org.springframework.boot</groupId>
 				<artifactId>spring-boot-maven-plugin</artifactId>
+				<configuration>
+                	<executable>true</executable>
+                	<finalName>rudik-web-portal</finalName>
+            	</configuration>
 			</plugin>
 		</plugins>
 	</build>

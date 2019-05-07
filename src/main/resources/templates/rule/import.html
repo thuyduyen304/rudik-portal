@@ -1,6 +1,6 @@
 <html xmlns:th="http://www.thymeleaf.org">
 <head>
-<title>All Rules</title>
+<title>Import</title>
 <!-- CSS load -->
 <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.0/css/bootstrap.min.css" />
 <link rel="stylesheet" href="https://cdn.datatables.net/1.10.19/css/jquery.dataTables.min.css" />
@@ -28,51 +28,35 @@
 	<!-- Navigation bar -->
 
 	<div class="wrapper">
-		<h2>Search Rules</h2>
+		<h2>Import Rules</h2>
 		<hr />
-		<!-- Criteria form -->
-		<form th:object="${searchForm}" action="/rule/search" method="post"
-			id="search-form">
+		<!-- Import form -->
+		<form th:object="${importForm}" action="/rule/import" method="post"
+			id="import-form" enctype="multipart/form-data">
 
 			<div class="container">
 				<div class="row">
 					<div class="col-md-6">
 						<div>
-							<label for="knowledgeBase">Knowledge Base</label> <select
-								th:field="*{knowledgeBase}">
-								<option th:value="none" th:text="--None--"></option>
-								<option th:each="kb: ${knowledgeBases}" th:value="${kb}"
-									th:text="${kb}"></option>
+							<label for="knowledgeBase">Knowledge Base</label> <select name="knowledgeBase"
+								
+								>
+									<option th:each="kb: ${knowledgeBases}" th:value="${kb.key}"
+									th:text="${kb.value}"></option>
 							</select>
 						</div>
 						<div>
-							<label for="predicate">Predicate</label> <select
-								th:field="*{predicate}">
-								<option th:value="none" th:text="--None--"></option>
-							</select>
-						</div>
-					</div>
-					<div class="col-md-4">
-						<div>
-							<label for="type">Rule Type</label> <select
-								th:field="*{ruleType}">
-								<option th:each="rt: ${ruleTypes}" th:value="${rt.key}"
-									th:text="${rt.value}"></option>
+							<label for="source">Source</label> <select name="source"
+								>
+									<option th:each="src: ${sources}" th:value="${src.key}"
+									th:text="${src.value}"></option>
 							</select>
 						</div>
 						<div>
-							<label for="humanConfidence">Human Confidence</label> <span>
-								from </span><input type="number" step="0.01"
-								th:field="*{humanConfidenceFrom}" maxlength="4" size="4"
-								placeholder="0.0" min="0" max="1" /> <span> to </span><input
-								type="number" step="0.01" th:field="*{humanConfidenceTo}"
-								maxlength="4" size="4" placeholder="1.0" min="0" max="1" />
+							<input type="file" name="file" />
 						</div>
-
-					</div>
-					<div class="col-md-2">
-						<button type="submit" id="btn-search"
-							class="btn btn-primary btn-sm">Apply</button>
+						<button type="submit" id="btn-import"
+							class="btn btn-primary btn-sm">Import</button>
 					</div>
 				</div>
 			</div>
@@ -82,25 +66,6 @@
 		<!-- Message -->
 		<div id="appMsg"></div>
 		<!-- Message -->
-
-		<!-- Results block -->
-		<div id="resultsBlock" style="display: none">
-			<hr />
-			<table id="results-table" class="display" style="width: 100%">
-				<thead>
-					<tr>
-						<th></th>
-						<th>Type</th>
-						<th>Rule</th>
-						<th>Quality Evaluation</th>
-						<th>Human Confidence</th>
-						<th>Computed Confidence</th>
-						<th>Sample Data</th>
-					</tr>
-				</thead>
-			</table>
-		</div>
-		<!-- Results block -->
 		
 	</div>
 

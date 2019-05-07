@@ -34,4 +34,21 @@ public class Atom {
 	public String getPredicate() {
 		return predicate;
 	}
+	
+	@Override
+    public String toString() 
+    { 
+        return predicate + "(" + subject + "," + object + ")"; 
+    } 
+	
+	@Override
+	public int hashCode() {
+		final int prime = 31;
+		int result = 1;
+		result = prime * result + ((object == null) ? 0 : object.hashCode());
+		result = prime * result
+				+ ((predicate == null) ? 0 : predicate.hashCode());
+		result = prime * result + ((subject == null) ? 0 : subject.hashCode());
+		return result;
+	}
 }
