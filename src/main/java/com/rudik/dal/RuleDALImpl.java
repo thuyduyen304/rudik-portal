@@ -81,6 +81,9 @@ public class RuleDALImpl implements RuleDAL {
 				Object[] values = (Object[]) value;
 				query.addCriteria(Criteria.where(field).gte(values[0]).lte(values[1]));
 				break;
+			case "NOT_NULL":
+				query.addCriteria(Criteria.where(field).ne(null));
+				break;
 			}
 			
 		}
@@ -99,7 +102,16 @@ public class RuleDALImpl implements RuleDAL {
 		return rule;
 	}
 	
-	
+	@Override
+	public Rule updateStatus(String rule_id, Boolean changes) {
+		
+		Query query = new Query();
+		query.addCriteria(Criteria.where("ruleId").is(rule_id));
+		Rule rule = mongoTemplate.findOne(query, Rule.class);
+		rule.setStatus(changes);
+		mongoTemplate.save(rule);
+		return rule;
+	}
 
 	
 }

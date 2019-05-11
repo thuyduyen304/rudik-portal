@@ -8,11 +8,12 @@ $(document).ready(
                             .ajax({
                                 type: "GET",
                                 contentType: "application/json",
-                                url: "/api/rules/" + knowledge_base + "/predicates",
+                                url: "/api/rules/all-predicates",
                                 dataType: 'json',
                                 cache: false,
                                 timeout: 600000,
                                 success: function(data) {
+                                	console.log(data);
                                     var html = '<option value="none">--None--</option>';
                                     var len = data.length;
                                     for (var i = 0; i < len; i++) {
@@ -33,7 +34,7 @@ $(document).ready(
                                 }
                             });
                     });
-
+        
         $("#search-form").submit(function(event) {
 
             // stop submit the form, we will post it manually.
@@ -63,7 +64,9 @@ $(document).ready(
 			e.preventDefault();
 			return false;
 		});
-        
+        $("#add-form :input").change(function() {
+        	$("#btn-add-rule").prop("disabled", true);
+    	});
         $("#add-form").submit(function(event) {
 
             // stop submit the form, we will post it manually.
@@ -74,13 +77,84 @@ $(document).ready(
         });
         
         $("#btn-check-score").click(function(event) {
-            var message = validation();
-            if (typeof message === 'object'){
+            var add = validation();
+            if (typeof add === 'object'){
             	$('#form-error').html('');
-            	$("#resultMessages").css("display", "block");
+            	$.ajax({
+        	        type: "POST",
+        	        contentType: "application/json",
+        	        url: "/api/rules/get-score",
+        	        data: JSON.stringify(add),
+        	        dataType: 'json',
+        	        cache: false,
+        	        timeout: 600000,
+        	        success: function(data) {
+        	        	$(".popup-rule").dialog('destroy').remove();
+        	            $("#btn-add-rule").prop("disabled", false);
+        	            var status = Object.keys(data[0])[0];
+        	            if (status == 'exist') {
+        	            	var title = "Rule is exist. Adding rule is not successfully";
+        	            }
+        	            else if (status == 'invalid') {
+        	            	var title = "Premise is wrong format.";
+        	            }
+        	            else {
+        	            	$("#resultMessages").css("display", "block");
+        	            	$(".resultMessages").text(status);
+        	            }
+        	            var html = '';
+        	            if (status == 'exist'){
+        		            $('#rule-details').html('');
+        		            html = '<section class="popup-rule" id="popup-rule" >' +
+        	                '<pre>' + JSON.stringify(data[0][status], null, 4) + '</pre>' +
+        	                '</section>';
+        		            $('#rule-details').html(html);
+        		            $(".popup-rule").dialog({
+            	                autoOpen: false,
+            	                resizable: false,
+            	                position: {
+            	                    my: "center top",
+            	                    at: "center",
+            	                    of: window
+            	                },
+            	                width: $(window).width() * 0.7,
+            	                height: 500,
+            	                open: function() {
+            	                    $('.ui-widget-overlay').addClass('custom-overlay');
+            	                },
+            	                title: title,
+            	                show: {
+            	                    effect: "fade",
+            	                    duration: 100
+            	                },
+            	                hide: {
+            	                    effect: "fade",
+            	                    duration: 100
+            	                }
+            	            });
+            	            $("#popup-rule").dialog("open");
+        	            }
+        	            else if (status == 'invalid'){
+        	            	$('#form-error').html('<ul class="errorMessages fa fa-warning" style="display: block;">' + 
+        	            			 'Premise is wrong format.</ul>');
+        	            }
+        	                   	          	        
+        	        },
+        	        error: function(e) {
+        	
+        	            var json = "<h4>Ajax Response</h4><pre>" + e.responseText +
+        	                "</pre>";
+        	            $('#resultsBlock').html(json);
+        	
+        	            console.log("ERROR : ", e);
+        	            $("#btn-add-rule").prop("disabled", false);
+        	
+        	        }
+        	    });
+            	           	
             }
             else{
-            	$('#form-error').html('<ul class="errorMessages fa fa-warning" style="display: block;">' + message +'</ul>');
+            	$('#form-error').html('<ul class="errorMessages fa fa-warning" style="display: block;">' + add +'</ul>');
             }
 
         });
@@ -92,7 +166,6 @@ function add_rule_submit() {
     if (typeof add === 'object') { 
     	$('#form-error').html('');
 	    $("#btn-add").prop("disabled", true);
-	    console.log(add);
 	    $.ajax({
 	        type: "POST",
 	        contentType: "application/json",
@@ -108,16 +181,29 @@ function add_rule_submit() {
 	            if (status == 'exist') {
 	            	var title = "Rule is exist. Adding rule is not successfully";
 	            }
+	            else if (status == 'invalid') {
+	            	var title = "Premise is wrong format.";
+	            }
 	            else {
 	            	var title = "Rule is added successfully.";
 	            }
 	            var html = '';
-	            $('#rule-details').html('');
-	            html = '<section class="popup-rule" id="popup-rule" >' +
-                '<pre>' + JSON.stringify(data[0][status], null, 4) + '</pre>' +
-                '</section>';
-	            $('#rule-details').html(html);
+	            if (status != 'invalid'){
+		            $('#rule-details').html('');
+		            html = '<section class="popup-rule" id="popup-rule" >' +
+	                '<pre>' + JSON.stringify(data[0][status], null, 4) + '</pre>' +
+	                '</section>';
+		            $('#rule-details').html(html);
+	            }
+	            else{
+	            	$('#rule-details').html('');
+		            html = '<section class="popup-rule" id="popup-rule" >' +
+	                '<pre>Example: http://dbpedia.org/ontology/birthDate(object,v0) & =(v0,v1)</pre>' +
+	                '</section>';
+		            $('#rule-details').html(html);
+	            }
 
+	            
 	            $(".popup-rule").dialog({
 	                autoOpen: false,
 	                resizable: false,
@@ -152,7 +238,7 @@ function add_rule_submit() {
 	            $('#resultsBlock').html(json);
 	
 	            console.log("ERROR : ", e);
-	            $("#btn-search").prop("disabled", false);
+	            $("#btn-add-rule").prop("disabled", false);
 	
 	        }
 	    });
@@ -169,7 +255,7 @@ function validation() {
     var add = {}
     add["knowledgeBase"] = $("#knowledgeBase").val();
     add["predicate"] = $("#predicate").val();
-    add["ruleType"] = $("#ruleType").val();
+    add["ruleType"] = $("#ruleType").val() == 1 ? true : false;
     add["premise"] = $("#premise").val();
     add["humanConfidence"] = $("#humanConfidence").val();
     add["qualityEvaluation"] = $("#qualityEvaluation").val();

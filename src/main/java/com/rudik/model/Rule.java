@@ -59,12 +59,23 @@ public class Rule {
 	@Field("source")
 	private String source;
 	
+	@Field("status")
+	private Boolean status;
+	
 	public Rule() {
 		
 	}
 	
 	public Rule(String source) {
 		this.source = source;
+	}
+	
+	public void setStatus(Boolean status) {
+		this.status = status;
+	}
+	
+	public Boolean getStatus() {
+		return this.status;
 	}
 	
 	public void setSource(String source) {

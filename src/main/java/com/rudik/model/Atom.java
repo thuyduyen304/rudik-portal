@@ -11,6 +11,9 @@ public class Atom {
 		this.predicate = predicate;
 	}
 	
+	public Atom() {
+	}
+	
 	public void setSubject(String subject) {
 		this.subject = subject;
 	}

@@ -21,5 +21,7 @@ public interface RuleDAL {
 	List<Rule> getRulesByCriteria(List<HashMap<String, Object>> criteria);
 	
 	Rule updateQualityEvaluation(String rule_id, Rule changes);
+	
+	Rule updateStatus(String rule_id, Boolean changes);
 
 }

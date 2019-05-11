@@ -1,6 +1,6 @@
 <html xmlns:th="http://www.thymeleaf.org">
 <head>
-<title>All Rules</title>
+<title>Approve Rules</title>
 <!-- CSS load -->
 <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.0/css/bootstrap.min.css" />
 <link rel="stylesheet" href="https://cdn.datatables.net/1.10.19/css/jquery.dataTables.min.css" />
@@ -18,10 +18,10 @@
 				<a class="navbar-brand" href="#">RuDiK</a>
 			</div>
 			<ul class="nav navbar-nav">
-				<li><a href="search">Show rules</a></li>
-				<li class="active"><a href="add">Add rule</a></li>
+				<li><a href="/rule/search">Show rules</a></li>
+				<li><a href="/rule/add">Add rules</a></li>
 				<li><a href="#">Import rules</a></li>
-				<li><a href="/rule/approve">Approve rules</a></li>
+				<li><a class="active" href="/rule/approve">Approve rules</a></li>
 				<li><a href="#">About</a></li>
 				<li><a href="/login">Login</a></li>
 			</ul>
@@ -30,18 +30,14 @@
 	<!-- Navigation bar -->
 
 	<div class="wrapper">
-		<h2>Add Rule</h2>
+		<h2>Approve Rules</h2>
 		<hr />
 		<!-- Criteria form -->
-		<form th:object="${addForm}" action="/rule/add" method="post"
-			id="add-form">
-			
+		<form th:object="${searchForm}" action="/rule/search" method="post"
+			id="search-form">
+
 			<div class="container">
 				<div class="row">
-					<div id="form-error" >
-			
-					</div>
-					<div id="rule-details"></div>
 					<div class="col-md-6">
 						<div>
 							<label for="knowledgeBase">Knowledge Base</label> <select
@@ -50,12 +46,6 @@
 								<option th:each="kb: ${knowledgeBases}" th:value="${kb}"
 									th:text="${kb}"></option>
 							</select>
-						</div>
-						<div>
-							<label for="sparql_endpoint">Sparql endpoint </label> <span id="sparql_endpoint"> http//localhost:8890/sparql </span>
-						</div>
-						<div>
-							<label for="graph_iri">Graph IRI </label> <span id="graph_iri">http://dbpedia.org</span>
 						</div>
 						<div>
 							<label for="predicate">Predicate</label> <select
@@ -72,45 +62,47 @@
 									th:text="${rt.value}"></option>
 							</select>
 						</div>
-
-					</div>
-					<div class="col-md-12">
-						<label for="type">Premise</label>
-		                <div class="input-premise">
-		                	<textarea class="form-control premises" th:field="*{premise}" rows="5" cols="30"></textarea>	    	
-		                </div>
-			            <div><i>Ex: http://dbpedia.org/ontology/birthDate(object,v0) &amp; =(v0,v1) &amp; http://dbpedia.org/ontology/birthDate(subject,v1)</i></div>
-		            </div>
-		            
-		            <div class="col-md-12">
 						<div>
-							<label for="type">Human Confidence</label> 
-							<input th:field="*{humanConfidence}"></input><i> Fill the value from 0 to 1.</i>
-						</div>
-						
-						<div>
-							<label for="type">Quality Evaluation</label> 
-							<input th:field="*{qualityEvaluation}"></input><i> Fill the value from 1, 2, 3, 4, 5.</i>
+							<label for="humanConfidence">Human Confidence</label> <span>
+								from </span><input type="number" step="0.01"
+								th:field="*{humanConfidenceFrom}" maxlength="4" size="4"
+								placeholder="0.0" min="0" max="1" /> <span> to </span><input
+								type="number" step="0.01" th:field="*{humanConfidenceTo}"
+								maxlength="4" size="4" placeholder="1.0" min="0" max="1" />
 						</div>
 
-					</div>		    
-				    
-				    <div class="col-md-12">
-						<button type="button" id="btn-check-score"
-							class="btn btn-primary btn-sm">Compute Confidence</button>						
 					</div>
-					
-					<div class="col-md-12" id="resultMessages" style="display: none">
-						<div class="resultMessages" id="computedConfidence">0.24234234234</div>
-						<button type="submit" id="btn-add-rule"
-							class="btn btn-primary btn-sm">Add Rule</button>
+					<div class="col-md-2">
+						<button type="submit" id="btn-search"
+							class="btn btn-primary btn-sm">Apply</button>
 					</div>
-					
 				</div>
 			</div>
 		</form>
+		<!-- Criteria form -->
+
+		<!-- Message -->
+		<div id="appMsg"></div>
+		<!-- Message -->
+
 		<!-- Results block -->
-		<div id="resultsBlock"></div>
+		<div id="resultsBlock" style="display: none">
+			<hr />
+			<table id="results-table" class="display" style="width: 100%">
+				<thead>
+					<tr>
+						<th></th>
+						<th>Type</th>
+						<th>Rule</th>
+						<th>Quality Evaluation</th>
+						<th>Human Confidence</th>
+						<th>Computed Confidence</th>
+						<th>Approve</th>
+					</tr>
+				</thead>
+			</table>
+		</div>
+		<!-- Results block -->
 		
 	</div>
 
@@ -130,8 +122,10 @@
 	<script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.0/js/bootstrap.min.js"></script>
 	<script src="https://cdn.datatables.net/1.10.19/js/jquery.dataTables.min.js"></script>
 	<script src="https://cdn.datatables.net/select/1.3.0/js/dataTables.select.min.js"></script>
+	<script src="https://cdn.datatables.net/buttons/1.5.6/js/dataTables.buttons.min.js"></script>
+	<script src="https://cdn.datatables.net/buttons/1.5.6/js/buttons.html5.min.js"></script>
 	<script src="https://code.jquery.com/ui/1.12.1/jquery-ui.js"></script>
-	<script type="text/javascript" src="../add_rule.js"></script>
+	<script type="text/javascript" src="../app_rule.js"></script>
 	<!-- JS load -->
 	
 </body>
