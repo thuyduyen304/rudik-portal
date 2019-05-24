@@ -8,12 +8,11 @@ $(document).ready(
                             .ajax({
                                 type: "GET",
                                 contentType: "application/json",
-                                url: "/api/rules/all-predicates",
+                                url: "/api/rules/" + knowledge_base + "/predicates",
                                 dataType: 'json',
                                 cache: false,
                                 timeout: 600000,
                                 success: function(data) {
-                                	console.log(data);
                                     var html = '<option value="none">--None--</option>';
                                     var len = data.length;
                                     for (var i = 0; i < len; i++) {
@@ -253,6 +252,9 @@ function add_rule_submit() {
 function validation() {
 	var message = '';
     var add = {}
+    if ($("#ruleType").val() == -1) {
+    	message += '<li>Choose the Rule Type.</li>';
+    }
     add["knowledgeBase"] = $("#knowledgeBase").val();
     add["predicate"] = $("#predicate").val();
     add["ruleType"] = $("#ruleType").val() == 1 ? true : false;
@@ -267,9 +269,7 @@ function validation() {
     if (add["predicate"] == 'none') {
     	message += '<li>Choose the Predicate.</li>';
     }
-    if (add["ruleType"] == -1) {
-    	message += '<li>Choose the Rule Type.</li>';
-    }
+    
     if (add["premise"] == '') {
     	message += '<li>Fill the Premise.</li>';
     }
@@ -292,7 +292,6 @@ function validation() {
     if (quality_arr.includes(add["qualityEvaluation"]) == false) {
     	message += '<li>Quality Evaluation belongs 1, 2, 3, 4, 5.</li>';
     }
-    
     if (message != ''){
     	return message;
     }
