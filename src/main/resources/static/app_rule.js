@@ -43,10 +43,14 @@ $(document).ready(
             e.preventDefault();
             
             var params = {}
-            params["qualityEvaluation"] = parseInt(this.elements["qualityEvaluation"].value);
+            
             row_idx = parseInt(this.elements["rowIdx"].value);
             column_idx = parseInt(this.elements["columnIdx"].value);
-
+            if(column_idx == 3) {
+            	params["qualityEvaluation"] = parseInt(this.elements["qualityEvaluation"].value);
+            } else if(column_idx == 4) {
+            	params["humanConfidence"] = parseFloat(this.elements["humanConfidence"].value);
+            }
             table = $("#results-table").DataTable();
             $.ajax({
                 type: "PUT",
@@ -57,7 +61,12 @@ $(document).ready(
                 cache: false,
                 timeout: 600000,
                 success: function(modified_rule) {
-                    cell_data = table.cell(row_idx, column_idx).data(modified_rule.qualityEvaluation).draw();
+                	if(column_idx == 3) {
+                		cell_data = table.cell(row_idx, column_idx).data(modified_rule.qualityEvaluation).draw();
+                    } else if(column_idx == 4) {
+                    	cell_data = table.cell(row_idx, column_idx).data(modified_rule.humanConfidence).draw();
+                    }
+                    
                 },
                 error: function(e) {
                     cell_data = table.cell(row_idx, column_idx).data();
@@ -87,8 +96,8 @@ $(document).ready(
             cell_edit = this;
             idx = table.cell(this).index();
             row_data = table.rows(idx.row).data();
-
-            form_elm = add_input_elm(idx, row_data[0].ruleId, row_data[0].qualityEvaluation);
+            value = table.cell(this).data(); //row_data[0].qualityEvaluation
+            form_elm = add_input_elm(idx, row_data[0].ruleId, value);
             $(this).html(form_elm);
         });
         
@@ -203,12 +212,23 @@ function search_rules_submit() {
                     }, {
                         "data": "qualityEvaluation",
                         className: "dt-center editable",
-                    }, {
-                        "data": "humanConfidence",
-                        className: "dt-center",
                         "render": function(data, type, row, meta) {
                             if (type === 'display') {
-                                data = '<a href="/instance/sample?rule_id=' + row.ruleId + '" >' + data + '</a>';
+                                data = '<div data-toggle="tooltip" data-placement="top" title="Click to edit">' +
+                                	 data + 
+                                	'</div>';
+                            }
+
+                            return data;
+                        }
+                    }, {
+                        "data": "humanConfidence",
+                        className: "dt-center editable",
+                        "render": function(data, type, row, meta) {
+                            if (type === 'display') {
+                                data = '<div data-toggle="tooltip" data-placement="top" title="Click to edit">' +
+                                	'<a href="/instance/sample?rule_id=' + row.ruleId + '" >' + data + '</a>' +
+                                	'</div>';
                             }
 
                             return data;
@@ -393,7 +413,12 @@ function trim_prefix(str) {
 function add_input_elm(idx, id, value) {
     var html = "<div>";
     html += "<form id='form-rule-edit-" + id + "' action='/api/rules/" + id + "' method='put'>";
-    html += "<input id='ejbeatycelledit' name='qualityEvaluation' type='number' min='1' max='5' value='" + value + "'></input>";
+    if(idx.column == 3) {
+    	html += "<input id='ejbeatycelledit' name='qualityEvaluation' type='number' placeholder='3' min='1' max='5' value='" + value + "'></input>";
+    } else if (idx.column == 4) {
+    	html += "<input id='ejbeatycelledit' name='humanConfidence' type='number' step='0.01' min='0' max='1' " +
+    			"maxlength='4' size='4' placeholder='0.0' value='" + value + "'></input>";
+    }
     html += "<button type='submit' class='btn btn-primary btn-sm' value='OK'>OK</button>";
     html += "<button type='button' class='btn btn-secondary btn-sm' value='Cancel'>Cancel</button>";
     html += '<input type="hidden" name="rowIdx" value="' + idx.row + '">';

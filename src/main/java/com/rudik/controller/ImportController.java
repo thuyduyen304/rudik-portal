@@ -1,14 +1,11 @@
 package com.rudik.controller;
 
 //import java.io.FileReader;
-import java.io.IOException;
 import java.io.InputStreamReader;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-
-import javax.print.attribute.standard.PrinterLocation;
 
 import org.apache.commons.csv.CSVFormat;
 import org.apache.commons.csv.CSVParser;
@@ -16,6 +13,8 @@ import org.apache.commons.csv.CSVRecord;
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.jena.ext.com.google.common.collect.Sets;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.security.access.annotation.Secured;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -34,6 +33,7 @@ import asu.edu.rule_miner.rudik.predicate.analysis.SparqlKBPredicateSelector;
 import asu.edu.rule_miner.rudik.rule_generator.DynamicPruningRuleDiscovery;
 
 import com.rudik.dal.RuleRepository;
+import com.rudik.model.Atom;
 import com.rudik.model.Rule;
 
 @Controller
@@ -45,18 +45,19 @@ public class ImportController {
     private KBPredicateSelector kbAnalysis;
     private DynamicPruningRuleDiscovery naive;
     
-    public ImportController() {
-    	ConfigurationFacility.setConfigurationFile("src/main/resources/DbpediaConfiguration.xml");
+    public ImportController(@Value("${app.rudikConfig}") String config) {
+    	ConfigurationFacility.setConfigurationFile(config);
     	kbAnalysis = new SparqlKBPredicateSelector();
     	naive = new DynamicPruningRuleDiscovery();
     }
     
     @GetMapping("/rule/import")
+    @Secured({"ROLE_ADMIN"})
     public String showImportForm(Model model) {
     	Map<String, String> knowledgeBases = new HashMap<String, String>() {{
         	put("dbpedia", "DBpedia");
-            put("yago", "Yago");
-            put("wikidata", "Wikidata");
+//            put("yago", "Yago");
+//            put("wikidata", "Wikidata");
         }};
         
         Map<String, String> sources = new HashMap<String, String>() {{
@@ -72,65 +73,110 @@ public class ImportController {
     }
     
     @PostMapping("/rule/import") 
+    @Secured({"ROLE_ADMIN"})
     public String importRules(@RequestParam("file") MultipartFile file, 
     		@RequestParam String knowledgeBase, @RequestParam String source, RedirectAttributes redirectAttributes) {
 
         if (file.isEmpty()) {
             redirectAttributes.addFlashAttribute("message", "Please select a file to upload");
-            return "redirect:showImportForm";
+            return "redirect:/rule/import";
         }
 
         try {
-//        	String t_pred = "http://dbpedia.org/ontology/launchSite";
-//        	String t_prem = "http://dbpedia.org/ontology/country(object,v0) & http://dbpedia.org/ontology/countryOrigin(subject,v0)";
-////        	Pair<String, String> subjectObjectType = kbAnalysis.getPredicateTypes(t_pred);
-//	        String typeSubject = "http://dbpedia.org/ontology/Rocket";
-//	        String typeObject = "http://dbpedia.org/ontology/Place";
-//	        Set<String> set_relations = Sets.newHashSet(t_pred);
-//	        Set<RuleAtom> rule_atom = HornRule.readHornRule(t_prem);
-//	        Double score = naive.getRuleConfidence(rule_atom, set_relations, typeSubject, typeObject, true);
-//	        System.out.println("test:" + score);
-////	        rule.setComputedConfidence(score);
-////			ruleRepository.save(rule);
-        	
-        	     	
         	InputStreamReader reader = new InputStreamReader(file.getInputStream());
-//        	CSVReader reader = new CSVReader(new InputStreamReader(file.getInputStream(), "UTF-8"));
-//        	CSVReader reader = new CSVReader(new InputStreamReader(file.getInputStream()));
-//        	String fileName = "C:\\Users\\DzienDzien\\Downloads\\dbpedia38.csv";
-//        	FileReader reader = new FileReader(fileName);
-        	CSVParser csvParser = CSVFormat.DEFAULT.withHeader().parse(reader);  
+        	CSVParser csvParser;
         	
-        	for (CSVRecord record : csvParser) {
-        		String rule_string = record.get("Rule");
-        		try {
-					Rule rule = Parser.amie_to_rudik("dbpedia", rule_string);
-					System.out.println("test hash:" + rule.hashCode());
-					List<Rule> check_exist = ruleRepository.findByHashcode(rule.hashCode());
-					if (check_exist.size() > 0) {
-						//rule exist
-					} else {	        
-						Pair<String, String> subjectObjectType = kbAnalysis.getPredicateTypes(rule.getPredicate());
-				        String typeSubject = subjectObjectType.getLeft();
-				        String typeObject = subjectObjectType.getRight();
-//				        System.out.println("test sbj:" + typeSubject);
-//				        System.out.println("test obj:" + typeObject);
-//				        System.out.println("test predicate:" + rule.getPredicate());
-//				        System.out.println("test premise:" + rule.getPremise());
-//				        System.out.println("test type:" + rule.getRuleType());
-				        Set<String> set_relations = Sets.newHashSet(rule.getPredicate());
-				        Set<RuleAtom> rule_atom = HornRule.readHornRule(rule.getPremise());
-				        Double score = naive.getRuleConfidence(rule_atom, set_relations, typeSubject, typeObject, rule.getRuleType());
-				        System.out.println("test score:" + score);
-				        rule.setComputedConfidence(score);
-						ruleRepository.save(rule);
-					}
-					
-				} catch (Exception e) {
-					// TODO Auto-generated catch block
-					e.printStackTrace();
-				}
-            }
+        	switch (source) {
+        		case "amie":
+                	csvParser = CSVFormat.DEFAULT.withHeader().parse(reader);  
+                	
+                	for (CSVRecord record : csvParser) {
+                		if(record.isSet("rule")) {
+                			String rule_string = record.get("rule");
+                    		try {
+            					Rule rule = Parser.amie_to_rudik(knowledgeBase, rule_string);
+            					List<Rule> check_exist = ruleRepository.findByHashcode(rule.hashCode());
+            					if (check_exist.size() > 0) {
+            						//rule exist
+            					} else {
+            						Double support;
+            						try {
+            							support = Double.parseDouble(record.get("support"));
+            						} catch (Exception e) {
+            							Pair<String, String> subjectObjectType = kbAnalysis.getPredicateTypes(rule.getPredicate());
+                				        String typeSubject = subjectObjectType.getLeft();
+                				        String typeObject = subjectObjectType.getRight();
+                				        Set<String> set_relations = Sets.newHashSet(rule.getPredicate());
+                				        Set<RuleAtom> rule_atom = HornRule.readHornRule(rule.getPremise());
+                				        support = naive.getRuleConfidence(rule_atom, set_relations, typeSubject, typeObject, rule.getRuleType());
+            						}
+            						rule.setStatus(true);
+            				        rule.setComputedConfidence(support);
+            						ruleRepository.save(rule);
+            					}
+            					
+            				} catch (Exception e) {
+            					// TODO Auto-generated catch block
+            					e.printStackTrace();
+            				}
+                		}
+                    }
+        			break;
+        		case "rudik":
+                	csvParser = CSVFormat.newFormat(';').withHeader()
+                			.withIgnoreSurroundingSpaces().parse(reader);  
+                	
+                	for (CSVRecord record : csvParser) {
+                		if (record.isSet("relation") &&
+                				record.isSet("type") &&
+                				record.isSet("premise")) {
+                			String predicate = record.get("relation").trim();
+                    		Boolean type = record.get("type").equals("1");
+                    		String premise = record.get("premise").trim();
+                    		
+                    		List<Atom> premise_triples = Parser.premise_to_atom_list(premise);
+                    		
+                    		if(premise_triples.size() > 0) {
+                    			Double support;
+                        		try {
+                        			support = Double.parseDouble(record.get("support"));
+                        		} catch(Exception e) {
+                        			Pair<String, String> subjectObjectType = kbAnalysis.getPredicateTypes(predicate);
+            				        String typeSubject = subjectObjectType.getLeft();
+            				        String typeObject = subjectObjectType.getRight();
+            				        Set<String> set_relations = Sets.newHashSet(predicate);
+            				        Set<RuleAtom> rule_atom = HornRule.readHornRule(premise);
+            				        support = naive.getRuleConfidence(rule_atom, set_relations, typeSubject, typeObject, type);
+                        		}
+                        		Rule rule = new Rule("rudik");
+                    			rule.setPremise(premise);
+                    			rule.setPredicate(predicate);
+                    			rule.setRuleType(type);
+                    			rule.setStatus(true);
+                    			rule.setComputedConfidence(support);
+                    			rule.setKnowledgeBase(knowledgeBase);
+                    			rule.setPremiseTriples(premise_triples);
+                    			rule.setStatus(true);
+                    			Atom conclusion = new Atom("subject", predicate, "object");
+                        		rule.setConclusionTriple(conclusion);
+                        		rule.setConclusion(conclusion.toString());
+
+            					List<Rule> check_exist = ruleRepository.findByHashcode(rule.hashCode());
+            					if (check_exist.size() > 0) {
+            						//rule exist
+            					} else {	        
+            						ruleRepository.save(rule);
+            					}
+                    		}
+                    		
+                		}
+                		
+                    }
+        			break;
+        	}
+        		
+
+
         } catch (Exception e) {
             e.printStackTrace();
         }

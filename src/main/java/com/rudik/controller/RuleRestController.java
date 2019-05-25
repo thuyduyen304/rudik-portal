@@ -12,6 +12,7 @@ import org.apache.jena.ext.com.google.common.collect.Sets;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.access.annotation.Secured;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -47,10 +48,10 @@ public class RuleRestController {
   private DynamicPruningRuleDiscovery naive;
   private KBPredicateSelector kbAnalysis;
 
-	public RuleRestController(RuleRepository ruleRepository, RuleDAL ruleDAL) {
+	public RuleRestController(@Value("${app.rudikConfig}") String config, RuleRepository ruleRepository, RuleDAL ruleDAL) {
 		this.ruleDAL = ruleDAL;
-		ConfigurationFacility.setConfigurationFile("src/main/resources/DbpediaConfiguration.xml");
-  	kbAnalysis = new SparqlKBPredicateSelector();
+		ConfigurationFacility.setConfigurationFile(config);
+		kbAnalysis = new SparqlKBPredicateSelector();
 	}
 	
 	@RequestMapping("/{knowledge_base}/predicates")

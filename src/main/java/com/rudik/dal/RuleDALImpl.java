@@ -97,7 +97,10 @@ public class RuleDALImpl implements RuleDAL {
 		Query query = new Query();
 		query.addCriteria(Criteria.where("ruleId").is(rule_id));
 		Rule rule = mongoTemplate.findOne(query, Rule.class);
-		rule.setQualityEvaluation(changes.getQualityEvaluation());
+		if(changes.getQualityEvaluation() != null)
+			rule.setQualityEvaluation(changes.getQualityEvaluation());
+		if(changes.getHumanConfidence() != null)
+			rule.setHumanConfidence(changes.getHumanConfidence());
 		mongoTemplate.save(rule);
 		return rule;
 	}

@@ -32,8 +32,14 @@ public class RuleController {
     
     @GetMapping(value = {"/", "/rule/search"})
     public String showSearchForm(Model model) {
+    	Map<String, String> knowledgeBases = new HashMap<String, String>() {{
+        	put("dbpedia", "DBpedia");
+//            put("yago", "Yago");
+//            put("wikidata", "Wikidata");
+        }};
+        
     	model.addAttribute("searchForm", new SearchForm());
-        model.addAttribute("knowledgeBases", ruleDAL.getAllKnowledgeBase());
+        model.addAttribute("knowledgeBases", knowledgeBases);
 
         Map<Integer, String> ruleTypes = new HashMap<Integer, String>() {{
         	put(-1, "--None--");
@@ -87,8 +93,13 @@ public class RuleController {
     @Secured({"ROLE_ADMIN"})
     @GetMapping(value = "/rule/approve")
     public String approveForm(Model model) {
+    	Map<String, String> knowledgeBases = new HashMap<String, String>() {{
+        	put("dbpedia", "DBpedia");
+//            put("yago", "Yago");
+//            put("wikidata", "Wikidata");
+        }};
     	model.addAttribute("searchForm", new SearchForm());
-      model.addAttribute("knowledgeBases", ruleDAL.getAllKnowledgeBase());
+    	model.addAttribute("knowledgeBases", knowledgeBases);
 
       Map<Integer, String> ruleTypes = new HashMap<Integer, String>() {{
       	put(-1, "--None--");

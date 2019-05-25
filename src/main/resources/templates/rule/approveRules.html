@@ -21,7 +21,7 @@
 				<li><a href="/rule/search">Show rules</a></li>
 				<li><a href="/rule/add">Add rules</a></li>
 				<li><a href="/rule/import">Import rules</a></li>
-				<li class="active"><a href="/rule/approve">Approve rules</a></li>
+				<li class="active"><a href="/rule/approve">Rule Management</a></li>
 				<li><a href="#">About</a></li>
 				<li><a href="/login">Login</a></li>
 			</ul>
@@ -30,7 +30,9 @@
 	<!-- Navigation bar -->
 
 	<div class="wrapper">
-		<h2>Approve Rules</h2>
+		<h2>Rule Management</h2>
+		<em class="small">Allow administrators approve as well as edit rules.
+		</em>
 		<hr />
 		<!-- Criteria form -->
 		<form th:object="${searchForm}" action="/rule/search" method="post"
@@ -40,11 +42,11 @@
 				<div class="row">
 					<div class="col-md-6">
 						<div>
-							<label for="knowledgeBase">Knowledge Base</label> <select
-								th:field="*{knowledgeBase}">
+							<label for="knowledgeBase">Knowledge Base</label> <select 
+							th:field="*{knowledgeBase}">
 								<option th:value="none" th:text="--None--"></option>
-								<option th:each="kb: ${knowledgeBases}" th:value="${kb}"
-									th:text="${kb}"></option>
+								<option th:each="kb: ${knowledgeBases}" th:value="${kb.key}"
+									th:text="${kb.value}"></option>
 							</select>
 						</div>
 						<div>

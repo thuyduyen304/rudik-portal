@@ -23,7 +23,7 @@ public final class Parser {
      */
 	public static Rule amie_to_rudik(String knowledge_base, String amie_rule) throws Exception {
 		
-    	Rule rule = new Rule("amie3");
+    	Rule rule = new Rule("amie");
     	rule.setKnowledgeBase(knowledge_base);
     	rule.setRuleType(true);
     	
@@ -98,6 +98,25 @@ public final class Parser {
         rule.setHashcode(rule.getHashcode());
 		
 		return rule;
+		
+	}
+	
+	public static List<Atom> premise_to_atom_list(String premise) throws Exception {
+		
+    	List<Atom> atoms_premise = new ArrayList<Atom>();
+    	for (String atom_str : premise.split("&")) {
+    		atom_str = atom_str.trim();
+    		String atom_pattern_str = "(.+)\\((.+)\\,(.+)\\)";
+    		Pattern atom_pattern = Pattern.compile(atom_pattern_str);
+    		Matcher atom_matcher = atom_pattern.matcher(atom_str);
+    		
+    		if(atom_matcher.find()) {
+    			Atom a = new Atom(atom_matcher.group(2), atom_matcher.group(1), atom_matcher.group(3));
+        		atoms_premise.add(a);
+    		} 
+    	}
+		
+		return atoms_premise;
 		
 	}
 }

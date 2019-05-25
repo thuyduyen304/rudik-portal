@@ -3,8 +3,6 @@
 <title>Import</title>
 <!-- CSS load -->
 <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.0/css/bootstrap.min.css" />
-<link rel="stylesheet" href="https://cdn.datatables.net/1.10.19/css/jquery.dataTables.min.css" />
-<link rel="stylesheet" href="https://cdn.datatables.net/select/1.3.0/css/select.dataTables.min.css" />
 <link rel="stylesheet" href="//code.jquery.com/ui/1.12.1/themes/base/jquery-ui.css" />
 <link rel="stylesheet" href="../css/style.css" />
 <!-- CSS load -->
@@ -21,7 +19,7 @@
 				<li><a href="/rule/search">Show rules</a></li>
 				<li><a href="/rule/add">Add rules</a></li>
 				<li class="active"><a href="/rule/import">Import rules</a></li>
-				<li><a href="/rule/approve">Approve rules</a></li>
+				<li><a href="/rule/approve">Rule Management</a></li>
 				<li><a href="#">About</a></li>
 				<li><a href="/login">Login</a></li>
 			</ul>
@@ -31,34 +29,52 @@
 
 	<div class="wrapper">
 		<h2>Import Rules</h2>
+		<em class="small">Import rules into the system.
+		Rules without the support score will be calculated automatically (DbPedia only). 
+		Existing rules will be ignored. </em>
 		<hr />
+		
 		<!-- Import form -->
 		<form th:object="${importForm}" action="/rule/import" method="post"
 			id="import-form" enctype="multipart/form-data">
 
 			<div class="container">
 				<div class="row">
-					<div class="col-md-6">
-						<div>
-							<label for="knowledgeBase">Knowledge Base</label> <select name="knowledgeBase"
-								
-								>
-									<option th:each="kb: ${knowledgeBases}" th:value="${kb.key}"
-									th:text="${kb.value}"></option>
-							</select>
+					<div>
+						<div class="form-group row">
+							<label class="col-sm-2 col-form-label" for="knowledgeBase">Knowledge Base</label> 
+							<div class="col-sm-10">
+								<select name="knowledgeBase">
+										<option th:each="kb: ${knowledgeBases}" th:value="${kb.key}"
+										th:text="${kb.value}"></option>
+								</select>
+							</div>
 						</div>
-						<div>
-							<label for="source">Source</label> <select name="source"
-								>
-									<option th:each="src: ${sources}" th:value="${src.key}"
-									th:text="${src.value}"></option>
-							</select>
+						<div class="form-group row">
+							<label class="col-sm-2 col-form-label" for="source">Source</label> 
+							<div class="col-sm-10">
+								<select name="source">
+										<option th:each="src: ${sources}" th:value="${src.key}"
+										th:text="${src.value}"></option>
+								</select>
+							</div>
 						</div>
-						<div>
-							<input type="file" name="file" />
+						<div class="form-group row">
+							<label class="col-sm-2 col-form-label" for="file">File</label>
+							<div class="col-sm-10">
+								<input type="file" name="file" required="required"/>
+								<div class="small">
+								<div><span>Download sample file for Amie rules <a href="/download/template?file_name=amie.csv">here.</a></span></div>
+								<div><span>Download sample file for Rudik rules <a href="/download/template?file_name=rudik.csv">here</a></span></div>
+								</div>
+							</div>
 						</div>
-						<button type="submit" id="btn-import"
-							class="btn btn-primary btn-sm">Import</button>
+						<div class="form-group row">
+        					<div class="col-sm-10 offset-sm-2">
+        						<button type="submit" class="btn btn-primary btn-sm" id="btn-import" 
+        						data-loading-text="Processing...">Import</button>
+							</div>
+						</div>
 					</div>
 				</div>
 			</div>
@@ -85,11 +101,6 @@
 	<!-- JS load -->
 	<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
 	<script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.0/js/bootstrap.min.js"></script>
-	<script src="https://cdn.datatables.net/1.10.19/js/jquery.dataTables.min.js"></script>
-	<script src="https://cdn.datatables.net/select/1.3.0/js/dataTables.select.min.js"></script>
-	<script src="https://cdn.datatables.net/buttons/1.5.6/js/dataTables.buttons.min.js"></script>
-	<script src="https://cdn.datatables.net/buttons/1.5.6/js/buttons.html5.min.js"></script>
-	<script src="https://code.jquery.com/ui/1.12.1/jquery-ui.js"></script>
 	<script type="text/javascript" src="../main.js"></script>
 	<!-- JS load -->
 	

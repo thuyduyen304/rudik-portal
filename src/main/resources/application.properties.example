@@ -11,3 +11,6 @@ server.port=8102
 spring.application.name=BootMongo
 
 spring.thymeleaf.cache=false
+
+app.rudikConfig=F:\\eclipse-workspace\\Rudik-Portal\\src\\main\\resources\\DbpediaConfiguration.xml
+app.downloadPath=F:\\eclipse-workspace\\Rudik-Portal\\downloads

@@ -31,6 +31,9 @@
 
 	<div class="wrapper">
 		<h2>Search Rules</h2>
+		<em class="small">List out rules base on following criteria.
+		Users can vote the <strong>rule quality</strong> and <strong>rule confidence</strong> by clicking the cell value. 
+		</em>
 		<hr />
 		<!-- Criteria form -->
 		<form th:object="${searchForm}" action="/rule/search" method="post"
@@ -40,11 +43,11 @@
 				<div class="row">
 					<div class="col-md-6">
 						<div>
-							<label for="knowledgeBase">Knowledge Base</label> <select
-								th:field="*{knowledgeBase}">
+							<label for="knowledgeBase">Knowledge Base</label> <select 
+							th:field="*{knowledgeBase}">
 								<option th:value="none" th:text="--None--"></option>
-								<option th:each="kb: ${knowledgeBases}" th:value="${kb}"
-									th:text="${kb}"></option>
+								<option th:each="kb: ${knowledgeBases}" th:value="${kb.key}"
+									th:text="${kb.value}"></option>
 							</select>
 						</div>
 						<div>
