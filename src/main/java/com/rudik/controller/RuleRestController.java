@@ -5,6 +5,9 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Set;
 import java.util.regex.Pattern;
+
+import javax.servlet.http.HttpServletRequest;
+
 import java.util.regex.Matcher;
 
 import org.apache.commons.lang3.tuple.Pair;
@@ -27,6 +30,8 @@ import com.rudik.form.AddForm;
 import com.rudik.form.SearchForm;
 import com.rudik.model.Atom;
 import com.rudik.model.Rule;
+import com.rudik.model.Vote;
+import com.rudik.model.VotingCount;
 
 import asu.edu.rule_miner.rudik.configuration.ConfigurationFacility;
 import asu.edu.rule_miner.rudik.model.horn_rule.HornRule;
@@ -99,6 +104,12 @@ public class RuleRestController {
 			     put("value", (searchForm.getRuleType() == 1));
 			}});
     	}
+    	criteria.add(new HashMap<String, Object>()
+	      {{
+	        	  put("field", "status");
+				  put("op", "=");
+				  put("value", true);
+		  }});
     	Double human_confidence_from = searchForm.getHumanConfidenceFrom();
     	Double human_confidence_to = searchForm.getHumanConfidenceTo();
     	if(human_confidence_from != null || human_confidence_to != null) {
@@ -300,11 +311,14 @@ List<HashMap<String, Rule>> final_rule = new ArrayList<HashMap<String, Rule>>();
 			     put("value", (searchForm.getRuleType() == 1));
 			}});
     	}
-    	criteria.add(new HashMap<String, Object>()
-			{{
-			     put("field", "status");
-			     put("op", "NOT_NULL");
-			}});
+    	if (searchForm.getRuleStatus() != null && searchForm.getRuleStatus() != -1) {
+    	      criteria.add(new HashMap<String, Object>()
+    	      {{
+    	        	  put("field", "status");
+    				  put("op", "=");
+    				  put("value", (searchForm.getRuleStatus() == 1));
+    		  }});
+    	}
     	Double human_confidence_from = searchForm.getHumanConfidenceFrom();
     	Double human_confidence_to = searchForm.getHumanConfidenceTo();
     	if(human_confidence_from != null || human_confidence_to != null) {
@@ -343,6 +357,25 @@ List<HashMap<String, Rule>> final_rule = new ArrayList<HashMap<String, Rule>>();
 		}
 
 		return rule;
+	}
+	
+	@PutMapping({"/{ruleid}/rating"})
+	public Vote voteRule(@RequestBody Vote vote, @PathVariable("ruleid") String ruleid, HttpServletRequest request) {
+	    if (request.getHeader("X-FORWARDED-FOR") == null) {
+	      vote.setIp(request.getRemoteHost());
+	    } else {
+	      String ip = request.getHeader("X-FORWARDED-FOR");
+	      String[] ips = ip.split(",");
+	      vote.setIp(ips[0].trim());
+	    } 
+	    vote.setRuleId(ruleid);
+
+	    return this.ruleDAL.updateVote(vote);
+	}
+	
+	@RequestMapping({"/{ruleid}/rating"})
+	public List<VotingCount> getVotes(@PathVariable("ruleid") String ruleid) { 
+		return this.ruleDAL.getVotes(ruleid); 
 	}
 	
 }

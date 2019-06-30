@@ -19,7 +19,7 @@ import com.rudik.security.MongoUserDetailsService;
 @Configuration
 @EnableConfigurationProperties
 @EnableGlobalMethodSecurity(securedEnabled = true)
-@Order(SecurityProperties.ACCESS_OVERRIDE_ORDER)
+//@Order(SecurityProperties.ACCESS_OVERRIDE_ORDER)
 public class SecurityConfiguration extends WebSecurityConfigurerAdapter {
   @Autowired
   MongoUserDetailsService userDetailsService;

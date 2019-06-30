@@ -81,6 +81,9 @@ public class ImportController {
             redirectAttributes.addFlashAttribute("message", "Please select a file to upload");
             return "redirect:/rule/import";
         }
+        String msg = "";
+        int count_success = 0;
+        int count_existing = 0;
 
         try {
         	InputStreamReader reader = new InputStreamReader(file.getInputStream());
@@ -98,6 +101,7 @@ public class ImportController {
             					List<Rule> check_exist = ruleRepository.findByHashcode(rule.hashCode());
             					if (check_exist.size() > 0) {
             						//rule exist
+            						count_existing++;
             					} else {
             						Double support;
             						try {
@@ -112,12 +116,15 @@ public class ImportController {
             						}
             						rule.setStatus(true);
             				        rule.setComputedConfidence(support);
+            				        rule.setHashcode(rule.hashCode());
             						ruleRepository.save(rule);
+            						count_success++;
             					}
             					
             				} catch (Exception e) {
             					// TODO Auto-generated catch block
             					e.printStackTrace();
+            					msg += "Error. Cannot import rules";
             				}
                 		}
                     }
@@ -164,8 +171,11 @@ public class ImportController {
             					List<Rule> check_exist = ruleRepository.findByHashcode(rule.hashCode());
             					if (check_exist.size() > 0) {
             						//rule exist
+            						count_existing++;
             					} else {	        
+            						rule.setHashcode(rule.hashCode());
             						ruleRepository.save(rule);
+            						count_success++;
             					}
                     		}
                     		
@@ -180,6 +190,8 @@ public class ImportController {
         } catch (Exception e) {
             e.printStackTrace();
         }
+        redirectAttributes.addFlashAttribute("msg", msg + "Successfully imported " + count_success + " rules. \n" + 
+                "Ignored " + count_existing + " rules.");
 
         return "redirect:/";
     }

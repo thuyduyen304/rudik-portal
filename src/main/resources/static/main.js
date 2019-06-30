@@ -47,9 +47,12 @@ $(document).ready(
             row_idx = parseInt(this.elements["rowIdx"].value);
             column_idx = parseInt(this.elements["columnIdx"].value);
             if(column_idx == 3) {
-            	params["qualityEvaluation"] = parseInt(this.elements["qualityEvaluation"].value);
+//            	params["qualityEvaluation"] = parseInt(this.elements["qualityEvaluation"].value);
+            	params["rating"] = parseInt(this.elements["qualityEvaluation"].value);
+            	params["field"] = "quality_evaluation";
             } else if(column_idx == 4) {
-            	params["humanConfidence"] = parseFloat(this.elements["humanConfidence"].value);
+            	params["rating"] = parseFloat(this.elements["humanConfidence"].value);
+            	params["field"] = "human_confidence";
             }
 
             table = $("#results-table").DataTable();
@@ -62,16 +65,21 @@ $(document).ready(
                 cache: false,
                 timeout: 600000,
                 success: function(modified_rule) {
-                	if(column_idx == 3) {
-                		cell_data = table.cell(row_idx, column_idx).data(modified_rule.qualityEvaluation).draw();
-                    } else if(column_idx == 4) {
-                    	cell_data = table.cell(row_idx, column_idx).data(modified_rule.humanConfidence).draw();
-                    }
+                	cell_data = table.cell(row_idx, column_idx).data();
+                    table.cell(row_idx, column_idx).data(cell_data).draw();
+//                	if(column_idx == 3) {
+////                		cell_data = table.cell(row_idx, column_idx).data(modified_rule.qualityEvaluation).draw();
+//                		cell_data = table.cell(row_idx, column_idx).data();
+//                        table.cell(row_idx, column_idx).data(cell_data).draw();
+//                    } else if(column_idx == 4) {
+//                    	cell_data = table.cell(row_idx, column_idx).data(modified_rule.humanConfidence).draw();
+//                    }
+                	$('#appMsg').html('<div class="alert alert-info">Your vote has been recorded.</div>');
                 },
                 error: function(e) {
                     cell_data = table.cell(row_idx, column_idx).data();
                     table.cell(row_idx, column_idx).data(cell_data).draw();
-                    $('#appMsg').html('<div class="alert alert-info">Error. Cannot update rule.</div>');
+                    $('#appMsg').html('<div class="alert alert-error">Error. Cannot process the request.</div>');
                 }
             });
         });
@@ -259,11 +267,33 @@ function search_rules_submit() {
                                     });
                                     $.fn.dataTable.fileSave(
                                         new Blob([JSON.stringify(export_data, null, 4)]),
-                                        'selected_export.json'
+                                        'json_export.json'
                                     );
                                 }
                             }
                         },
+                        {
+                            text: 'SHACL Export',
+                            action: function() {
+                                if (table.rows({
+                                        selected: true
+                                    }).count() == 0) {
+                                    $('#appMsg').html('<div class="alert alert-info">There is no selected rows.</div>');
+                                } else {
+                                    var export_data = [];
+                                    table.rows({
+                                        selected: true
+                                    }).every(function() {
+                                        export_data.push(this.data());
+                                    });
+                                    shapes = shacl_export(export_data);
+                                    $.fn.dataTable.fileSave(
+                                        new Blob([shapes]),
+                                        'shacl_export.ttl'
+                                    );
+                                }
+                            }
+                        }
 
                     ],
                     "pagingType": "simple_numbers",
@@ -330,10 +360,13 @@ function trim_prefix(str) {
 
 function add_input_elm(idx, id, value) {
     var html = "<div>";
-    html += "<form id='form-rule-edit-" + id + "' action='/api/rules/" + id + "' method='put'>";
+    html += "<form id='form-rule-edit-" + id + "' action='/api/rules/" + id + "/rating' method='put'>";
     if(idx.column == 3) {
+    	if(value === null) value = 3;
     	html += "<input id='ejbeatycelledit' name='qualityEvaluation' type='number' placeholder='3' min='1' max='5' value='" + value + "'></input>";
     } else if (idx.column == 4) {
+    	if(value === null) value = 0.0;
+//    	html += "<form id='form-rule-edit-" + id + "' action='/api/rules/" + id + "' method='put'>";
     	html += "<input id='ejbeatycelledit' name='humanConfidence' type='number' step='0.01' min='0' max='1' " +
     			"maxlength='4' size='4' placeholder='0.0' value='" + value + "'></input>";
     }
@@ -345,4 +378,168 @@ function add_input_elm(idx, id, value) {
     html += "</div>";
 
     return html;
+}
+
+function shacl_export(data) {
+	text = "";
+	text += "@prefix dash: <http://datashapes.org/dash#> . \n" +
+			"@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> . \n" +
+			"@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> . \n" +
+			"@prefix schema: <http://schema.org/> . \n" +
+			"@prefix sh: <http://www.w3.org/ns/shacl#> . \n" +
+			"@prefix xsd: <http://www.w3.org/2001/XMLSchema#> . \n" +
+			"@prefix shapes: <http://rudik.eurecom.fr/ruleshapes/> . \n\n";
+	
+	data.forEach(function(rule) {
+		premise = rule.premise;
+		atoms = premise.split("&");
+		finish = false;
+		path = "(";
+		next_var = "";
+		shape_contraint = "sh:property";
+		compare_op = "";
+		compare_path = "";
+		
+		literal = (premise.match(/[=,<,>]\(.+\)/gi) || []).length;
+		
+		if(rule.ruleType != true) {
+			if(literal === 1) {
+				path += "<" + rule.predicate + "> ";
+				next_var = "object";
+				
+				atoms_count = atoms.length;
+				j = 0;
+				while(j < (atoms_count - 1)) {
+					for(var i = 0; i < atoms.length; i++) {
+						if(atoms[i].includes(next_var)) {
+							atom = atoms.splice(i, 1).shift(); 
+							atom = atom.trim();
+							elements = atom.split(/(.+)\((.+)\,(.+)\)/g);
+							if(elements[1].match(/[=,<,>]/gi) != null) {
+								if(elements[2] == next_var) {
+									switch(elements[1]) {
+									case "<":
+										shape_contraint = "sh:not";
+										compare_op = "sh:lessThan";
+										break;
+									case "<=":
+										shape_contraint = "sh:not";
+										compare_op = "sh:lessThanOrEquals";
+										break;
+									case ">":
+										compare_op = "sh:lessThanOrEquals";
+										break;
+									case ">=":
+										compare_op = "sh:lessThan";
+										break;
+									case "=":
+										compare_op = "sh:equals";
+										break;
+									case "!=":
+										compare_op = "sh:disjoint";
+										break;
+									}
+									next_var = elements[3];
+								} else if(elements[3] == next_var) {
+									switch(elements[1]) {
+									case "<":
+										compare_op = "sh:lessThanOrEquals";
+										break;
+									case "<=":
+										compare_op = "sh:lessThan";
+										break;
+									case ">":
+										shape_contraint = "sh:not";
+										compare_op = "sh:lessThan";
+										break;
+									case ">=":
+										shape_contraint = "sh:not";
+										compare_op = "sh:lessThanOrEquals";
+										break;
+									case "=":
+										compare_op = "sh:equals";
+										break;
+									case "!=":
+										compare_op = "sh:disjoint";
+										break;
+									}
+									next_var = elements[2];
+								}
+							} else {
+								if(elements[2] == next_var) {
+									path += "<" + elements[1] + "> ";
+									next_var = elements[3];
+								} else if(elements[3] == next_var) {
+									path += "[sh:inversePath <" + elements[1] + ">] ";
+									next_var = elements[2];
+								}
+							}
+							j++;
+							break;
+						}
+					};
+				}
+				
+				//find the param of literal
+				for(var i = 0; i < atoms.length; i++) {
+					if(atoms[i].includes(next_var)) {
+						atom = atoms.splice(i, 1).shift();
+						atom = atom.trim();
+						elements = atom.split(/(.+)\((.+)\,(.+)\)/g);
+						if(elements[3] == next_var) {
+							compare_path = "<" + elements[1] + "> ";
+						} 
+						break;
+					}
+				};
+				
+			} else if(literal == 0) {
+				compare_path = "<" + rule.predicate + ">";
+				compare_op = "sh:disjoint";
+				next_var = "subject";
+				//find the path
+				while(next_var != "object") {
+					for(var i = 0; i < atoms.length; i++) {
+						if(atoms[i].includes(next_var)) {
+							atom = atoms.splice(i, 1).shift();
+							atom = atom.trim();
+							elements = atom.split(/(.+)\((.+)\,(.+)\)/g);
+							if(elements[2] == next_var) {
+								path += "<" + elements[1] + "> ";
+								next_var = elements[3];
+							} else if(elements[3] == next_var) {
+								path += "[sh:inversePath <" + elements[1] + ">] ";
+								next_var = elements[2];
+							}
+							
+							break;
+						}
+					};
+				}
+			}
+		} else {
+			
+		}
+
+		path += ")";
+		
+		shape = "\n" + "shapes:" + rule.ruleId + "\n";
+		shape += "a sh:NodeShape;\n";
+		shape += "rdfs:comment \"" + trim_prefix(premise) + " => " + trim_prefix(rule.predicate) + "\";\n";
+		if(rule.ruleType == true) {
+			shape += "sh:description \"Positive rule\" ;\n\n.\n"
+		} else {
+			shape += "sh:description \"Negative rule\" ;\n";
+			shape += "sh:targetSubjectsOf <" + rule.predicate + ">;\n";
+			shape += shape_contraint + " [\n";
+			shape += "\t" + "sh:path " + path + ";\n";
+			shape += "\t" + compare_op + " " + compare_path + ";\n";
+			shape += "]\n\n";
+			shape += ".\n"
+		}
+		
+		text += shape;
+	})
+	
+	return text;
 }

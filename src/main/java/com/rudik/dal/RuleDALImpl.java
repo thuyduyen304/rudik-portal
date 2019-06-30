@@ -1,13 +1,21 @@
 package com.rudik.dal;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 
 import com.mongodb.BasicDBObject;
+import com.mongodb.client.DistinctIterable;
+import com.mongodb.client.MongoCursor;
 import com.rudik.model.Rule;
+import com.rudik.model.Vote;
+import com.rudik.model.VotingCount;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.mongodb.core.MongoTemplate;
+import org.springframework.data.mongodb.core.aggregation.Aggregation;
+import org.springframework.data.mongodb.core.aggregation.AggregationOperation;
+import org.springframework.data.mongodb.core.aggregation.AggregationResults;
 import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.stereotype.Repository;
@@ -38,9 +46,14 @@ public class RuleDALImpl implements RuleDAL {
 
 	@Override
 	public List<String> getAllKnowledgeBase() {
-		@SuppressWarnings("unchecked")
-		List<String> kb = mongoTemplate.getCollection("rules").distinct("knowledge_base");
-		return kb;
+		List<String> kb = new ArrayList<String>();
+	    DistinctIterable<String> distinctIterable = this.mongoTemplate.getCollection("rules").distinct("knowledge_base", String.class);
+	    MongoCursor<String> cursor = distinctIterable.iterator();
+	    while (cursor.hasNext()) {
+	      String item = (String)cursor.next();
+	      kb.add(item);
+	    } 
+	    return kb;
 	}
 
 	@Override
@@ -55,8 +68,13 @@ public class RuleDALImpl implements RuleDAL {
 	public List<String> getAllPredicates(String knowledge_base) {
 		// TODO Auto-generated method stub
 		BasicDBObject o = new BasicDBObject("knowledge_base", "DBPedia");
-		@SuppressWarnings("unchecked")
-		List<String> predicates = mongoTemplate.getCollection("rules").distinct("predicate");
+		List<String> predicates = new ArrayList<String>();
+	    DistinctIterable<String> distinctIterable = this.mongoTemplate.getCollection("rules").distinct("predicate", String.class);
+	    MongoCursor<String> cursor = distinctIterable.iterator();
+	    while (cursor.hasNext()) {
+	      String item = (String)cursor.next();
+	      predicates.add(item);
+	    } 
 		return predicates;
 	}
 	
@@ -116,5 +134,35 @@ public class RuleDALImpl implements RuleDAL {
 		return rule;
 	}
 
+	@Override
+	public List<VotingCount> getVotes(String ruleId) {
+	    Aggregation agg = Aggregation.newAggregation(new AggregationOperation[] {
+	          Aggregation.match(Criteria.where("ruleId").is(ruleId)), 
+	          Aggregation.match(Criteria.where("field").is("quality_evaluation")), 
+	          Aggregation.group(new String[] { "rating" }).count().as("total"), 
+	          Aggregation.project(new String[] { "total" }).and("rating").previousOperation()
+	        });
+	    
+	    AggregationResults<VotingCount> group_results = this.mongoTemplate.aggregate(agg, Vote.class, VotingCount.class);
+	    
+	    List<VotingCount> result = group_results.getMappedResults();
+	    
+	    return result;
+	}
+	
+	@Override
+	public Vote updateVote(Vote vote) {
+	    this.mongoTemplate.save(vote);
+	    return vote;
+	}
+	
+	@Override
+	public Vote getVote(String rule_id, String ip, String field) {
+	    Query query = new Query();
+	    query.addCriteria(Criteria.where("ruleId").is(rule_id));
+	    query.addCriteria(Criteria.where("ip").is(ip));
+	    query.addCriteria(Criteria.where("field").is(field));
+	    return (Vote)this.mongoTemplate.findOne(query, Vote.class);
+	}
 	
 }

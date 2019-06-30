@@ -17,6 +17,16 @@ public class SearchForm {
 	
 	private Double humanConfidenceTo;
 	
+	private Integer ruleStatus;
+	
+	public void setRuleStatus(Integer status) { 
+		this.ruleStatus = status; 
+	}
+	
+	public Integer getRuleStatus() { 
+		return this.ruleStatus; 
+	}
+	
 	public Double getHumanConfidenceFrom() {
 		return humanConfidenceFrom;
 	}

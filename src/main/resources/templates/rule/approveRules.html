@@ -40,7 +40,7 @@
 
 			<div class="container">
 				<div class="row">
-					<div class="col-md-6">
+					<div class="col-md-5">
 						<div>
 							<label for="knowledgeBase">Knowledge Base</label> <select 
 							th:field="*{knowledgeBase}">
@@ -75,6 +75,18 @@
 
 					</div>
 					<div class="col-md-2">
+						<div th:if="${ruleStatus} != null" >
+							<div>
+								<label for="type">Rule Status</label> <select
+									th:field="*{ruleStatus}">
+									<option th:each="rt: ${ruleStatus}" th:value="${rt.key}"
+										th:text="${rt.value}"></option>
+								</select>
+							</div>
+						</div>
+					</div>
+					
+					<div class="col-md-1">
 						<button type="submit" id="btn-search"
 							class="btn btn-primary btn-sm">Apply</button>
 					</div>
@@ -114,7 +126,7 @@
 	<!-- Footer -->
 	<footer class="page-footer font-small blue">
 		<div class="footer-copyright text-center py-3">
-			� 2019
+			2019
 		</div>
 	</footer>
 	<!-- Footer -->

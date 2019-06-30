@@ -145,6 +145,7 @@ function search_rules_submit() {
     search["knowledgeBase"] = $("#knowledgeBase").val();
     search["predicate"] = $("#predicate").val();
     search["ruleType"] = $("#ruleType").val();
+    search["ruleStatus"] = $("#ruleStatus").val();
     search["humanConfidenceFrom"] = $("#humanConfidenceFrom").val();
     search["humanConfidenceTo"] = $("#humanConfidenceTo").val();
 
@@ -215,7 +216,7 @@ function search_rules_submit() {
                         "render": function(data, type, row, meta) {
                             if (type === 'display') {
                                 data = '<div data-toggle="tooltip" data-placement="top" title="Click to edit">' +
-                                	 data + 
+                                '<a href="javascript:void(0)" onclick="displayVotes(\'' + row.ruleId + '\');" >' + data + '</a>' +
                                 	'</div>';
                             }
 
@@ -414,8 +415,12 @@ function add_input_elm(idx, id, value) {
     var html = "<div>";
     html += "<form id='form-rule-edit-" + id + "' action='/api/rules/" + id + "' method='put'>";
     if(idx.column == 3) {
+    	if(value == null)
+    		value = 3;
     	html += "<input id='ejbeatycelledit' name='qualityEvaluation' type='number' placeholder='3' min='1' max='5' value='" + value + "'></input>";
     } else if (idx.column == 4) {
+    	if(value == null)
+    		value = 0.0;
     	html += "<input id='ejbeatycelledit' name='humanConfidence' type='number' step='0.01' min='0' max='1' " +
     			"maxlength='4' size='4' placeholder='0.0' value='" + value + "'></input>";
     }
@@ -427,4 +432,32 @@ function add_input_elm(idx, id, value) {
     html += "</div>";
 
     return html;
+}
+
+function displayVotes(ruleid) {
+	$.ajax({
+        type: "GET",
+        contentType: "application/json",
+        url: "/api/rules/" + ruleid + "/rating",
+        dataType: 'json',
+        cache: false,
+        timeout: 600000,
+        success: function(votes) {
+        	console.log("test");
+        	console.log(votes);
+        	text = "<div><h3>Users votes:</h3>"
+        	votes.forEach(function(item) {
+        		text += "<div> Rating " + item.rating + ": " + item.total + " vote(s)</div>";
+        	});
+        	text += "</div>";
+        	var w = window.open('', '', 'width=400,height=200,resizeable,scrollbars');
+            w.document.write(text);
+            w.document.close(); // needed for chrome and safari
+        },
+        error: function(e) {
+        	console.log("ERROR : ", e);
+            $('#appMsg').html('<div class="alert alert-info">Error. Cannot get votes.</div>');
+        }
+    });
+	
 }

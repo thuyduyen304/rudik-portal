@@ -108,6 +108,14 @@ public class RuleController {
       }};
       model.addAttribute("ruleTypes", ruleTypes);
       
+      Map<Integer, String> ruleStatus = new HashMap<Integer, String>() {{
+      	put(-1, "--None--");
+          put(0, "Not Approved");
+          put(1, "Approved");
+      }};
+    
+      model.addAttribute("ruleStatus", ruleStatus);
+      
     	return "rule/approveRules";
     }
     
@@ -134,6 +142,13 @@ public class RuleController {
         }};
         model.addAttribute("ruleTypes", ruleTypes);
 
+        Map<Integer, String> ruleStatus = new HashMap<Integer, String>() {{
+        	put(-1, "--None--");
+            put(0, "Not Approved");
+            put(1, "Approved");
+        }};
+      
+        model.addAttribute("ruleStatus", ruleStatus);
         return "rule/approveRules";
     }
 

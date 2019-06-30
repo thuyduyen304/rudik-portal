@@ -35,6 +35,15 @@
 		Users can vote the <strong>rule quality</strong> and <strong>rule confidence</strong> by clicking the cell value. 
 		</em>
 		<hr />
+		
+		<!-- Message -->
+		<div id="appMsg">
+			<div class="alert alert-info" th:if="${msg != null}" th:text="${msg}">
+			</div>
+		</div>
+		<!-- Message -->
+		
+		
 		<!-- Criteria form -->
 		<form th:object="${searchForm}" action="/rule/search" method="post"
 			id="search-form">
@@ -84,10 +93,6 @@
 		</form>
 		<!-- Criteria form -->
 
-		<!-- Message -->
-		<div id="appMsg"></div>
-		<!-- Message -->
-
 		<!-- Results block -->
 		<div id="resultsBlock" style="display: none">
 			<hr />
@@ -115,7 +120,7 @@
 	<!-- Footer -->
 	<footer class="page-footer font-small blue">
 		<div class="footer-copyright text-center py-3">
-			� 2019
+			2019
 		</div>
 	</footer>
 	<!-- Footer -->
