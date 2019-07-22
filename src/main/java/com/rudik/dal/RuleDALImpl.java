@@ -108,6 +108,13 @@ public class RuleDALImpl implements RuleDAL {
 		System.out.println(query); 
 		return mongoTemplate.find(query, Rule.class);
 	}
+	
+	@Override
+	public List<Rule> getAllValidRules() {
+		Query query = new Query();
+		query.addCriteria(Criteria.where("status").is(true));
+		return mongoTemplate.find(query, Rule.class);
+	}
 
 	@Override
 	public Rule updateQualityEvaluation(String rule_id, Rule changes) {
@@ -165,4 +172,9 @@ public class RuleDALImpl implements RuleDAL {
 	    return (Vote)this.mongoTemplate.findOne(query, Vote.class);
 	}
 	
+	@Override
+	public Rule updateRule(Rule rule) {
+	    this.mongoTemplate.save(rule);
+	    return rule;
+	}
 }

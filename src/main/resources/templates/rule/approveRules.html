@@ -18,10 +18,19 @@
 				<a class="navbar-brand" href="#">RuDiK</a>
 			</div>
 			<ul class="nav navbar-nav">
-				<li><a href="/rule/search">Show rules</a></li>
+				<li><a href="/">Show rules</a></li>
 				<li><a href="/rule/add">Add rules</a></li>
-				<li><a href="/rule/import">Import rules</a></li>
-				<li class="active"><a href="/rule/approve">Rule Management</a></li>
+				<li class="dropdown active">
+				<a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+		          Rule Administration
+		        </a>
+					<div class="dropdown-menu">
+						<a href="/rule/import">Import rules</a>
+						<a href="/rule/export_all">Export rules</a>
+						<div class="divider"></div>
+						<a href="/rule/approve">Rule Management</a>
+					</div>
+				</li>
 				<li><a href="#">About</a></li>
 				<li><a href="/login">Login</a></li>
 			</ul>

@@ -22,9 +22,13 @@ public interface RuleDAL {
 	
 	List<Rule> getRulesByCriteria(List<HashMap<String, Object>> criteria);
 	
+	List<Rule> getAllValidRules();
+	
 	Rule updateQualityEvaluation(String rule_id, Rule changes);
 	
 	Rule updateStatus(String rule_id, Boolean changes);
+	
+	Rule updateRule(Rule rule);
 	
 	List<VotingCount> getVotes(String rule_id);
 	

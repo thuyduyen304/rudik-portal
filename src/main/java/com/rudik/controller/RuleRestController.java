@@ -2,6 +2,7 @@ package com.rudik.controller;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.regex.Pattern;
@@ -17,6 +18,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.access.annotation.Secured;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
@@ -142,7 +144,7 @@ List<HashMap<String, Rule>> final_rule = new ArrayList<HashMap<String, Rule>>();
   	String premise = rule.getPremise();
   	// Premise
 		if(premise != "") {
-			List<Atom> premiseTriples = getPremiseTriples(premise);	 		
+			Set<Atom> premiseTriples = getPremiseTriples(premise);	 		
 			if (premiseTriples.isEmpty()) {  		
 	  		final_rule.add(new HashMap<String, Rule>()
 	  		{{
@@ -205,7 +207,7 @@ List<HashMap<String, Rule>> final_rule = new ArrayList<HashMap<String, Rule>>();
   	String premise = rule.getPremise();
   	// Premise
 		if(premise != "") {
-			List<Atom> premiseTriples = getPremiseTriples(premise);	 		
+			Set<Atom> premiseTriples = getPremiseTriples(premise);	 		
 			if (premiseTriples.isEmpty()) {  		
 	  		final_rule.add(new HashMap<String, Rule>()
 	  		{{
@@ -257,13 +259,13 @@ List<HashMap<String, Rule>> final_rule = new ArrayList<HashMap<String, Rule>>();
 		return final_rule;
 	}
 	
-	public List<Atom> getPremiseTriples(String premise) {
+	public Set<Atom> getPremiseTriples(String premise) {
 		String[] pre = premise.split("&"); 
 		String subject = "";
 		String object = "";
 		String predicate = "";
 		Atom triple = new Atom(subject, predicate, object);
-		List<Atom> premiseTriples = new ArrayList<Atom>();
+		Set<Atom> premiseTriples = new HashSet<Atom>();
 		for (int j = 0; j < pre.length; j++) {
 			String pattern = "(^[http:\\/\\/]+[a-zA-Z:\\/.]+|^[=<>]+)([(]+)([a-z0-9]+)([,]+)([a-z0-9]+)(\\))";
 			// Create a Pattern object
@@ -378,4 +380,18 @@ List<HashMap<String, Rule>> final_rule = new ArrayList<HashMap<String, Rule>>();
 		return this.ruleDAL.getVotes(ruleid); 
 	}
 	
+	@Secured({"ROLE_ADMIN"})
+	@RequestMapping({"/update_hashcode"})
+    public String updateHashcode() {
+		List<Rule> rules = ruleDAL.getAllRules();
+		int i = 0;
+		for(Rule r: rules) {
+			Integer new_hashcode = r.hashCode();
+			r.setHashcode(new_hashcode);
+			ruleDAL.updateRule(r);
+			i++;
+		}
+		
+		return "done";
+    }
 }

@@ -1,10 +1,26 @@
 
-nav.navbar {
+nav.navbar, nav.navbar .dropdown-menu {
 	    background-color: #337ab7 !important;
 }
 
 nav.navbar a {
 	color: white !important;
+}
+
+nav.navbar .dropdown-menu a {
+	display: block;
+	padding: .25rem 1.5rem;
+	clear: both;
+	white-space: nowrap;
+	background-color: transparent;
+    border: 0;
+}
+
+.divider {
+	height: 0;
+    margin: .5rem 0;
+    overflow: hidden;
+    border-top: 1px solid #e9ecef;
 }
 
 #search-form table {width: 100%}
@@ -63,7 +79,7 @@ nav ul.nav {
 	float: right;
 }
 
-nav ul.nav li.active a {
+nav ul.nav li.active > a {
 	color: #337ab7 !important;
 }
 

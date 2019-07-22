@@ -141,7 +141,7 @@ public class ImportController {
                     		Boolean type = record.get("type").equals("1");
                     		String premise = record.get("premise").trim();
                     		
-                    		List<Atom> premise_triples = Parser.premise_to_atom_list(premise);
+                    		Set<Atom> premise_triples = Parser.premise_to_atom_list(premise);
                     		
                     		if(premise_triples.size() > 0) {
                     			Double support;

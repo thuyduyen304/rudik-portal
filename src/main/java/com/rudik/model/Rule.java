@@ -2,6 +2,7 @@ package com.rudik.model;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
 
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;
@@ -39,7 +40,7 @@ public class Rule {
 	private Integer hashcode;
 	
 	@Field("premise_triples")
-	private List<Atom> premiseTriples;
+	private Set<Atom> premiseTriples;
 	
 	@Field("conclusion_triple")
 	private Atom conclusionTriple;
@@ -118,11 +119,11 @@ public class Rule {
 		return hashcode;
 	}
 	
-	public void setPremiseTriples(List<Atom> premise_triples) {
+	public void setPremiseTriples(Set<Atom> premise_triples) {
 		premiseTriples = premise_triples;
 	}
 	
-	public List<Atom> getPremiseTriples() {
+	public Set<Atom> getPremiseTriples() {
 		return premiseTriples;
 	}
 	
@@ -222,8 +223,8 @@ public class Rule {
     	final int prime = 31;
 		int result = 1;
 //		result = prime * result + ((knowledgeBase == null) ? 0 : knowledgeBase.hashCode());
-//		result = prime * result + ((source == null) ? 0 : source.hashCode());
-//		result = prime * result + ((predicate == null) ? 0 : predicate.hashCode());
+//		result = prime * result + ((ruleType == null) ? 0 : ruleType.hashCode());
+		result = prime * result + ((predicate == null) ? 0 : predicate.hashCode());
 		result = prime * result + ((premiseTriples == null || premiseTriples.size() == 0) ? 0 : premiseTriples.hashCode());
 
 		return result;

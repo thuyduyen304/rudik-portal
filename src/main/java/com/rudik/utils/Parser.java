@@ -2,8 +2,10 @@ package com.rudik.utils;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.regex.Pattern;
 import java.util.regex.Matcher;
 import com.rudik.model.Atom;
@@ -70,7 +72,7 @@ public final class Parser {
         	}
         	
         	int i = 0;
-        	List<Atom> atoms_premise = new ArrayList<Atom>();
+        	Set<Atom> atoms_premise = new HashSet<Atom>();
         	String premise = "";
         	while(premise_matcher.find()) {
         		String atom_sbj = premise_matcher.group(1);
@@ -101,9 +103,9 @@ public final class Parser {
 		
 	}
 	
-	public static List<Atom> premise_to_atom_list(String premise) throws Exception {
+	public static Set<Atom> premise_to_atom_list(String premise) throws Exception {
 		
-    	List<Atom> atoms_premise = new ArrayList<Atom>();
+    	Set<Atom> atoms_premise = new HashSet<Atom>();
     	for (String atom_str : premise.split("&")) {
     		atom_str = atom_str.trim();
     		String atom_pattern_str = "(.+)\\((.+)\\,(.+)\\)";
