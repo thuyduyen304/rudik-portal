@@ -42,5 +42,17 @@ public class InstanceDALImpl implements InstanceDAL {
 		return inst;
 	}
 	
+	@Override
+	public Instance updateLabel(String instance_id, Instance changes) {
+		Query query = new Query();
+		query.addCriteria(Criteria.where("instanceId").is(instance_id));
+		Instance instance = mongoTemplate.findOne(query, Instance.class, "sample_instances");
+		if(changes.getLabel() != null)
+			instance.setLabel(changes.getLabel());
+		
+		mongoTemplate.save(instance, "sample_instances");
+		return instance;
+	}
+	
 	
 }

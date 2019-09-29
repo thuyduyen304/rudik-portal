@@ -12,4 +12,6 @@ public interface InstanceDAL {
 	List<Instance> getInstanceByRuleId(String rule_id, String collection);
 	
 	Instance addNewInstance(Instance inst, String collection);
+	
+	Instance updateLabel(String instance_id, Instance changes);
 }

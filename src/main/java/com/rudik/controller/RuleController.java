@@ -6,7 +6,10 @@ import org.springframework.ui.ModelMap;
 import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.ModelAttribute;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 
@@ -41,6 +44,7 @@ import com.rudik.dal.*;
 import com.rudik.form.AddForm;
 import com.rudik.form.SearchForm;
 import com.rudik.model.Atom;
+import com.rudik.model.Instance;
 import com.rudik.model.Rule;
 import com.rudik.utils.Parser;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -53,6 +57,7 @@ import com.google.gson.JsonIOException;
 public class RuleController {
 	@Autowired
 	private RuleDAL ruleDAL;
+	private InstanceDAL instanceDAL;
 	
 	@Autowired
     RuleRepository ruleRepository;
@@ -334,5 +339,14 @@ public class RuleController {
         return "rule/info";
         
     }
+    
+    @Secured({"ROLE_ADMIN"})
+    @GetMapping(value = "/rule_sample/{id}")
+    public String sample_instances(Model model, @PathVariable(value="id") String rule_id) {
+    	Rule rule = ruleDAL.getRuleById(rule_id);
+    	model.addAttribute("rule", rule);
+    	
+    	return "rule/sampleInstances";
+    } 
 
 }
