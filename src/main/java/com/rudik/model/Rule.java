@@ -19,16 +19,16 @@ public class Rule {
 	private String predicate;
 	
 	@Field("knowledge_base")
-	private String knowledgeBase;
+	private String knowledge_base;
 	
 	@Field("sparql_endpoint")
-	private String sparqlEndpoint;
+	private String sparql_endpoint;
 	
 	@Field("graph_iri")
-	private String graphIri;
+	private String graph_iri;
 	
 	@Field("rule_type")
-	private Boolean ruleType;
+	private Boolean rule_type;
 	
 	@Field("premise")
 	private String premise;
@@ -40,22 +40,22 @@ public class Rule {
 	private Integer hashcode;
 	
 	@Field("premise_triples")
-	private Set<Atom> premiseTriples;
+	private Set<Atom> premise_triples;
 	
 	@Field("conclusion_triple")
-	private Atom conclusionTriple;
+	private Atom conclusion_triple;
 	
 	@Field("human_confidence")
-	private Double humanConfidence;
+	private Double human_confidence;
 	
 	@Field("configuration")
 	private List<Configuration> configuration;
 	
 	@Field("computed_confidence")
-	private Double computedConfidence;
+	private Double computed_confidence;
 	
 	@Field("quality_evaluation")
-	private Short qualityEvaluation;
+	private Short quality_evaluation;
 	
 	@Field("source")
 	private String source;
@@ -87,20 +87,20 @@ public class Rule {
 		return this.source;
 	}
 	
-	public void setSparqlEndpoint(String endpoint) {
-		sparqlEndpoint = endpoint;
+	public void setSparql_endpoint(String endpoint) {
+		sparql_endpoint = endpoint;
 	}
 	
-	public String getSparqlEndpoint() {
-		return sparqlEndpoint;
+	public String getSparql_endpoint() {
+		return sparql_endpoint;
 	}
 	
-	public void setGraphIri(String graph_iri) {
-		graphIri = graph_iri;
+	public void setGraph_iri(String graph_iri) {
+		this.graph_iri = graph_iri;
 	}
 	
-	public String getGraphIri() {
-		return graphIri;
+	public String getGraph_iri() {
+		return graph_iri;
 	}
 	
 	public void setConclusion(String conclusion) {
@@ -119,28 +119,28 @@ public class Rule {
 		return hashcode;
 	}
 	
-	public void setPremiseTriples(Set<Atom> premise_triples) {
-		premiseTriples = premise_triples;
+	public void setPremise_triples(Set<Atom> premise_triples) {
+		this.premise_triples = premise_triples;
 	}
 	
-	public Set<Atom> getPremiseTriples() {
-		return premiseTriples;
+	public Set<Atom> getPremise_triples() {
+		return premise_triples;
 	}
 	
-	public void setConclusionTriple(Atom conclusion) {
-		this.conclusionTriple = conclusion;
+	public void setConclusion_triple(Atom conclusion) {
+		this.conclusion_triple = conclusion;
 	}
 	
 	public Atom getConclusionTriple() {
-		return conclusionTriple;
+		return conclusion_triple;
 	}
 	
-	public void setHumanConfidence(Double human_confidence) {
-		this.humanConfidence = human_confidence;
+	public void setHuman_confidence(Double human_confidence) {
+		this.human_confidence = human_confidence;
 	}
 	
-	public Double getHumanConfidence() {
-		return humanConfidence;
+	public Double getHuman_confidence() {
+		return human_confidence;
 	}
 	
 	public void setConfiguration(List<Configuration> config) {
@@ -167,20 +167,20 @@ public class Rule {
     	this.predicate = predicate;
     }
     
-    public String getKnowledgeBase() {
-    	return knowledgeBase;
+    public String getKnowledge_base() {
+    	return knowledge_base;
     }
     
-    public void setKnowledgeBase(String knowledge_base) {
-    	this.knowledgeBase = knowledge_base;
+    public void setKnowledge_base(String knowledge_base) {
+    	this.knowledge_base = knowledge_base;
     }
     
-    public Boolean getRuleType() {
-    	return ruleType;
+    public Boolean getRule_type() {
+    	return rule_type;
     }
     
-    public void setRuleType(Boolean rule_type) {
-    	this.ruleType = rule_type;
+    public void setRule_type(Boolean rule_type) {
+    	this.rule_type = rule_type;
     }
     
     public String getPremise() {
@@ -191,20 +191,20 @@ public class Rule {
     	this.premise = premise;
     }
     
-    public void setComputedConfidence(Double computed_confidence) {
-		this.computedConfidence = computed_confidence;
+    public void setComputed_confidence(Double computed_confidence) {
+		this.computed_confidence = computed_confidence;
 	}
 	
-	public Double getComputedConfidence() {
-		return computedConfidence;
+	public Double getComputed_confidence() {
+		return computed_confidence;
 	}
 	
-	public void setQualityEvaluation(Short quality_evaluation) {
-		this.qualityEvaluation = quality_evaluation;
+	public void setQuality_evaluation(Short quality_evaluation) {
+		this.quality_evaluation = quality_evaluation;
 	}
 	
-	public Short getQualityEvaluation() {
-		return qualityEvaluation;
+	public Short getQuality_evaluation() {
+		return quality_evaluation;
 	}
 
     @Override
@@ -215,7 +215,7 @@ public class Rule {
             + ", premise="
             + premise 
             + ", qualityEvaluation="
-            + qualityEvaluation + "]"; 
+            + quality_evaluation + "]"; 
     } 
     
     @Override
@@ -225,7 +225,7 @@ public class Rule {
 //		result = prime * result + ((knowledgeBase == null) ? 0 : knowledgeBase.hashCode());
 //		result = prime * result + ((ruleType == null) ? 0 : ruleType.hashCode());
 		result = prime * result + ((predicate == null) ? 0 : predicate.hashCode());
-		result = prime * result + ((premiseTriples == null || premiseTriples.size() == 0) ? 0 : premiseTriples.hashCode());
+		result = prime * result + ((premise_triples == null || premise_triples.size() == 0) ? 0 : premise_triples.hashCode());
 
 		return result;
     }

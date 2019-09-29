@@ -24,7 +24,7 @@ public class Instance {
 	private String conclusion;
 	
 	@Field("hashcode")
-	private String hashcode;
+	private Integer hashcode;
 	
 	@Field("premise_triples")
 	private List<Atom> premiseTriples;
@@ -37,6 +37,17 @@ public class Instance {
 	
 	@Field("details")
 	private String details;
+	
+	@Field("rule_type")
+	private Boolean ruleType;
+	
+	public void setRuleType(Boolean type) {
+		ruleType = type;
+	}
+	
+	public Boolean getRuleType() {
+		return ruleType;
+	}
 	
 	public void setInstanceId(String instance_id) {
 		instanceId = instance_id;
@@ -54,11 +65,11 @@ public class Instance {
 		return conclusion;
 	}
 	
-	public void setHashcode(String code) {
+	public void setHashcode(Integer code) {
 		hashcode = code;
 	}
 	
-	public String getHashcode() {
+	public Integer getHashcode() {
 		return hashcode;
 	}
 	
@@ -116,6 +127,16 @@ public class Instance {
     
     public void setPremise(String premise) {
     	this.premise = premise;
+    }
+    
+    @Override
+    public int hashCode() {
+    	final int prime = 31;
+		int result = 1;
+		result = prime * result + ((predicate == null) ? 0 : predicate.hashCode());
+		result = prime * result + ((premiseTriples == null || premiseTriples.size() == 0) ? 0 : premiseTriples.hashCode());
+
+		return result;
     }
 
 }

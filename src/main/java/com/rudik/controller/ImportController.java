@@ -2,6 +2,7 @@ package com.rudik.controller;
 
 //import java.io.FileReader;
 import java.io.InputStreamReader;
+
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -11,7 +12,9 @@ import org.apache.commons.csv.CSVFormat;
 import org.apache.commons.csv.CSVParser;
 import org.apache.commons.csv.CSVRecord;
 import org.apache.commons.lang3.tuple.Pair;
+import org.apache.commons.io.FilenameUtils;
 import org.apache.jena.ext.com.google.common.collect.Sets;
+import org.apache.tomcat.util.json.JSONParser;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.access.annotation.Secured;
@@ -32,6 +35,7 @@ import asu.edu.rule_miner.rudik.predicate.analysis.KBPredicateSelector;
 import asu.edu.rule_miner.rudik.predicate.analysis.SparqlKBPredicateSelector;
 import asu.edu.rule_miner.rudik.rule_generator.DynamicPruningRuleDiscovery;
 
+import com.google.gson.Gson;
 import com.rudik.dal.RuleRepository;
 import com.rudik.model.Atom;
 import com.rudik.model.Rule;
@@ -56,13 +60,14 @@ public class ImportController {
     public String showImportForm(Model model) {
     	Map<String, String> knowledgeBases = new HashMap<String, String>() {{
         	put("dbpedia", "DBpedia");
-//            put("yago", "Yago");
-//            put("wikidata", "Wikidata");
+//            put("yago3", "Yago3");
+            put("all", "All (json format only)");
         }};
         
         Map<String, String> sources = new HashMap<String, String>() {{
         	put("rudik", "Rudik");
             put("amie", "Amie");
+            put("all", "All");
         }};
         
     	
@@ -112,10 +117,10 @@ public class ImportController {
                 				        String typeObject = subjectObjectType.getRight();
                 				        Set<String> set_relations = Sets.newHashSet(rule.getPredicate());
                 				        Set<RuleAtom> rule_atom = HornRule.readHornRule(rule.getPremise());
-                				        support = naive.getRuleConfidence(rule_atom, set_relations, typeSubject, typeObject, rule.getRuleType());
+                				        support = naive.getRuleConfidence(rule_atom, set_relations, typeSubject, typeObject, rule.getRule_type());
             						}
             						rule.setStatus(true);
-            				        rule.setComputedConfidence(support);
+            				        rule.setComputed_confidence(support);
             				        rule.setHashcode(rule.hashCode());
             						ruleRepository.save(rule);
             						count_success++;
@@ -158,14 +163,14 @@ public class ImportController {
                         		Rule rule = new Rule("rudik");
                     			rule.setPremise(premise);
                     			rule.setPredicate(predicate);
-                    			rule.setRuleType(type);
+                    			rule.setRule_type(type);
                     			rule.setStatus(true);
-                    			rule.setComputedConfidence(support);
-                    			rule.setKnowledgeBase(knowledgeBase);
-                    			rule.setPremiseTriples(premise_triples);
+                    			rule.setComputed_confidence(support);
+                    			rule.setKnowledge_base(knowledgeBase);
+                    			rule.setPremise_triples(premise_triples);
                     			rule.setStatus(true);
                     			Atom conclusion = new Atom("subject", predicate, "object");
-                        		rule.setConclusionTriple(conclusion);
+                        		rule.setConclusion_triple(conclusion);
                         		rule.setConclusion(conclusion.toString());
 
             					List<Rule> check_exist = ruleRepository.findByHashcode(rule.hashCode());
@@ -182,6 +187,33 @@ public class ImportController {
                 		}
                 		
                     }
+        			break;
+        		case "all":
+        			System.out.println("debug1");
+        			String ext = FilenameUtils.getExtension(file.getOriginalFilename());
+        			if (ext.equals("json")) {
+        				try {
+        					Gson gson = new Gson();
+        					Rule[] rules = gson.fromJson(reader, Rule[].class);
+        					
+        					for(Rule rule: rules) {
+        						System.out.println(rule);
+        						List<Rule> check_exist = ruleRepository.findByHashcode(rule.hashCode());
+            					if (check_exist.size() > 0) {
+            						//rule exist
+            						count_existing++;
+            					} else {	        
+            						rule.setHashcode(rule.hashCode());
+            						ruleRepository.save(rule);
+            						count_success++;
+            					}
+        					}
+        					System.out.println(count_success);
+        				} catch (Exception e) {
+        					System.out.println(e);
+        				}
+        				
+        			}
         			break;
         	}
         		

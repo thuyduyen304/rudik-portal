@@ -26,8 +26,8 @@ public final class Parser {
 	public static Rule amie_to_rudik(String knowledge_base, String amie_rule) throws Exception {
 		
     	Rule rule = new Rule("amie");
-    	rule.setKnowledgeBase(knowledge_base);
-    	rule.setRuleType(true);
+    	rule.setKnowledge_base(knowledge_base);
+    	rule.setRule_type(true);
     	
     	Map<String,String> params_mapping = new HashMap<String,String>();
     	
@@ -67,7 +67,7 @@ public final class Parser {
         		
         		rule.setPredicate(predicate.trim());
         		Atom conclusion = new Atom(params_mapping.get(sbj), predicate, params_mapping.get(obj));
-        		rule.setConclusionTriple(conclusion);
+        		rule.setConclusion_triple(conclusion);
         		rule.setConclusion(conclusion.toString());
         	}
         	
@@ -92,7 +92,7 @@ public final class Parser {
         		atoms_premise.add(a);
         		premise += a.toString() + " & ";
         	}
-        	rule.setPremiseTriples(atoms_premise);
+        	rule.setPremise_triples(atoms_premise);
         	premise = premise.substring(0, premise.lastIndexOf("&"));
         	rule.setPremise(premise.trim());
         }
@@ -120,5 +120,18 @@ public final class Parser {
 		
 		return atoms_premise;
 		
+	}
+	
+	public static Boolean is_premise(String premise) throws Exception {
+		premise = premise.trim();
+		String atom_pattern_str = "^(.+)\\((.+)\\,(.+)\\)$";
+		Pattern atom_pattern = Pattern.compile(atom_pattern_str);
+		Matcher atom_matcher = atom_pattern.matcher(premise);
+		
+		if(atom_matcher.find()) {
+			return true;
+		} 
+		
+		return false;
 	}
 }

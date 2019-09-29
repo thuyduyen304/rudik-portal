@@ -67,13 +67,16 @@ public class RuleDALImpl implements RuleDAL {
 	@Override
 	public List<String> getAllPredicates(String knowledge_base) {
 		// TODO Auto-generated method stub
-		BasicDBObject o = new BasicDBObject("knowledge_base", "DBPedia");
+		if (knowledge_base == "yago3")
+	    	  knowledge_base = "yago";
+		BasicDBObject o = new BasicDBObject("knowledge_base", "dbpedia");
 		List<String> predicates = new ArrayList<String>();
 	    DistinctIterable<String> distinctIterable = this.mongoTemplate.getCollection("rules").distinct("predicate", String.class);
 	    MongoCursor<String> cursor = distinctIterable.iterator();
 	    while (cursor.hasNext()) {
 	      String item = (String)cursor.next();
-	      predicates.add(item);
+	      if(item.contains(knowledge_base))
+	    	  predicates.add(item);
 	    } 
 		return predicates;
 	}
@@ -105,8 +108,11 @@ public class RuleDALImpl implements RuleDAL {
 			}
 			
 		}
+//		query.addCriteria(Criteria.where("knowledge_base").is("dbpedia"));
 		System.out.println(query); 
-		return mongoTemplate.find(query, Rule.class);
+		List<Rule> test = mongoTemplate.find(query, Rule.class);
+		System.out.println(test);
+		return test;
 	}
 	
 	@Override
@@ -122,10 +128,10 @@ public class RuleDALImpl implements RuleDAL {
 		Query query = new Query();
 		query.addCriteria(Criteria.where("ruleId").is(rule_id));
 		Rule rule = mongoTemplate.findOne(query, Rule.class);
-		if(changes.getQualityEvaluation() != null)
-			rule.setQualityEvaluation(changes.getQualityEvaluation());
-		if(changes.getHumanConfidence() != null)
-			rule.setHumanConfidence(changes.getHumanConfidence());
+		if(changes.getQuality_evaluation() != null)
+			rule.setQuality_evaluation(changes.getQuality_evaluation());
+		if(changes.getHuman_confidence() != null)
+			rule.setHuman_confidence(changes.getHuman_confidence());
 		mongoTemplate.save(rule);
 		return rule;
 	}

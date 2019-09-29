@@ -10,4 +10,6 @@ public interface InstanceDAL {
 	Instance getInstanceById(String instanceId);
 	
 	List<Instance> getInstanceByRuleId(String rule_id, String collection);
+	
+	Instance addNewInstance(Instance inst, String collection);
 }

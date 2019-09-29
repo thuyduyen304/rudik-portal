@@ -3,6 +3,7 @@ package com.rudik.dal;
 import java.util.List;
 
 import com.rudik.model.Instance;
+import com.rudik.model.Rule;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.mongodb.core.MongoTemplate;
@@ -33,6 +34,12 @@ public class InstanceDALImpl implements InstanceDAL {
 		Query query = new Query();
 		query.addCriteria(Criteria.where("ruleId").is(rule_id));
 		return mongoTemplate.find(query, Instance.class, collection);
+	}
+	
+	@Override
+	public Instance addNewInstance(Instance inst, String collection) {
+		mongoTemplate.save(inst, collection);
+		return inst;
 	}
 	
 	

@@ -10,8 +10,10 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 
+import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.text.DateFormat;
@@ -20,6 +22,9 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import javax.validation.Valid;
 
@@ -35,7 +40,9 @@ import org.springframework.security.access.annotation.Secured;
 import com.rudik.dal.*;
 import com.rudik.form.AddForm;
 import com.rudik.form.SearchForm;
+import com.rudik.model.Atom;
 import com.rudik.model.Rule;
+import com.rudik.utils.Parser;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.ObjectWriter;
 import com.google.gson.Gson;
@@ -46,12 +53,15 @@ import com.google.gson.JsonIOException;
 public class RuleController {
 	@Autowired
 	private RuleDAL ruleDAL;
+	
+	@Autowired
+    RuleRepository ruleRepository;
     
     @GetMapping(value = {"/", "/rule/search"})
     public String showSearchForm(Model model) {
     	Map<String, String> knowledgeBases = new HashMap<String, String>() {{
         	put("dbpedia", "DBpedia");
-//            put("yago", "Yago");
+            put("yago3", "Yago3");
 //            put("wikidata", "Wikidata");
         }};
         
@@ -112,7 +122,7 @@ public class RuleController {
     public String approveForm(Model model) {
     	Map<String, String> knowledgeBases = new HashMap<String, String>() {{
         	put("dbpedia", "DBpedia");
-//            put("yago", "Yago");
+            put("yago3", "Yago3");
 //            put("wikidata", "Wikidata");
         }};
     	model.addAttribute("searchForm", new SearchForm());
@@ -174,6 +184,7 @@ public class RuleController {
     @RequestMapping(path = "/rule/export_all", method = RequestMethod.GET)
     public  ResponseEntity<Resource> exportAllRules(@Value("${app.exportPath}") String directory) throws JsonIOException, IOException {
     	GsonBuilder builder = new GsonBuilder();
+    	builder.setPrettyPrinting();
     	builder.disableHtmlEscaping();
         Gson gson = builder.create();
     	DateFormat dateFormat = new SimpleDateFormat("yyyy_MM_dd");
@@ -195,6 +206,132 @@ public class RuleController {
                 // Content-Length
                 .contentLength(file.length()) //
                 .body(resource);
+        
+    }
+    
+    @Secured({"ROLE_ADMIN"})
+    @RequestMapping(path = "/rule/import_from_alldbpedia", method = RequestMethod.GET)
+    public String importAdllDbpedia(@Value("${app.alldbpedia}") String path, ModelMap model) throws JsonIOException, IOException {
+    	BufferedReader reader;
+    	String predicate = "";
+		Boolean output_flag = false;
+		Boolean type = true;
+		int count_existing = 0;
+		int count_success = 0;
+		try {
+			reader = new BufferedReader(new FileReader(path));
+			String line = reader.readLine();
+			
+			while (line != null) {
+				line = line.trim();
+				if (line.length() > 0) {
+					String predicate_pattern_str = "-------------------------\\[(\\D+)\\]";
+		    		Pattern predicate_pattern = Pattern.compile(predicate_pattern_str);
+		    		Matcher predicate_matcher = predicate_pattern.matcher(line);
+		    		
+		    		if(predicate_matcher.find()) {
+		    			// new predicate
+		    			predicate = predicate_matcher.group(1);
+		    		} else {
+		    			if (line.endsWith("--??FILLUP"))
+		    				line = line.replace("--??FILLUP", "");
+		    			
+		    			// check if it's output
+		    			if (line.equals("Output rules:")) {
+		    				// multilines
+		    				output_flag = true;
+		    			} else if (line.startsWith("Output rules:")) {
+		    				// one line
+		    				output_flag = false;
+		    				
+		    				String output_pattern_str = "\\[((.+)\\((.+)\\,(.+)\\))\\]";
+				    		Pattern output_pattern = Pattern.compile(output_pattern_str);
+				    		Matcher output_matcher = output_pattern.matcher(line);
+				    		
+				    		if(output_matcher.find()) {
+				    			// new predicate
+				    			String output = output_matcher.group(1);
+				    			// get rules
+			    				String[] rules = output.split(",(?=(\\s|http))");
+			    				for(String premise : rules) {
+			    					// create rule
+			    					Set<Atom> premise_triples = Parser.premise_to_atom_list(premise);
+			    					
+			    					Rule rule = new Rule("rudik");
+		                			rule.setPremise(premise);
+		                			rule.setPredicate(predicate);
+		                			rule.setRule_type(type);
+		                			rule.setStatus(true);
+		                			rule.setComputed_confidence(-1.);
+		                			rule.setHuman_confidence(-1.);
+		                			rule.setKnowledge_base("dbpedia");
+		                			rule.setPremise_triples(premise_triples);
+		                			Atom conclusion = new Atom("subject", predicate, "object");
+		                    		rule.setConclusion_triple(conclusion);
+		                    		rule.setConclusion(conclusion.toString());
+
+		        					List<Rule> check_exist = ruleRepository.findByHashcode(rule.hashCode());
+		        					if (check_exist.size() > 0) {
+		        						//rule exist
+		        						count_existing++;
+		        					} else {	        
+		        						rule.setHashcode(rule.hashCode());
+		        						ruleRepository.save(rule);
+		        						count_success++;
+		        					}
+			    				}
+				    		}
+		    				
+		    				
+		    			} else if (output_flag) {
+		    				// check if this line is a premise
+		    	    		if(Parser.is_premise(line)) {
+		    	    			// create a new rule
+		    	    			String premise = line;
+		    	    			Set<Atom> premise_triples = Parser.premise_to_atom_list(premise);
+		    	    			
+		    	    			Rule rule = new Rule("rudik");
+	                			rule.setPremise(premise);
+	                			rule.setPredicate(predicate);
+	                			rule.setRule_type(type);
+	                			rule.setStatus(true);
+	                			rule.setComputed_confidence(-1.);
+	                			rule.setHuman_confidence(-1.);
+	                			rule.setKnowledge_base("dbpedia");
+	                			rule.setPremise_triples(premise_triples);
+	                			Atom conclusion = new Atom("subject", predicate, "object");
+	                    		rule.setConclusion_triple(conclusion);
+	                    		rule.setConclusion(conclusion.toString());
+
+	        					List<Rule> check_exist = ruleRepository.findByHashcode(rule.hashCode());
+	        					if (check_exist.size() > 0) {
+	        						//rule exist
+	        						count_existing++;
+	        					} else {	        
+	        						rule.setHashcode(rule.hashCode());
+	        						ruleRepository.save(rule);
+	        						count_success++;
+	        					}
+		    	    		} else {
+		    	    			output_flag = false;
+		    	    		}
+		    			} else {
+		    				output_flag = false;
+		    			}
+		    			
+		    		}
+				}
+	    	
+				// read next line
+				line = reader.readLine();
+			}
+			reader.close();
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+      
+        model.addAttribute("msg", "Import " + count_success + " rules, ignore " + count_existing + " rules");
+        return "rule/info";
         
     }
 

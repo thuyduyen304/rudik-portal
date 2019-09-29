@@ -85,7 +85,7 @@ public class RuleRestController {
 		if(!searchForm.getKnowledgeBase().equals("none")) {
     		criteria.add(new HashMap<String, Object>()
 			{{
-			     put("field", "knowledgeBase");
+			     put("field", "knowledge_base");
 			     put("op", "=");
 			     put("value", searchForm.getKnowledgeBase());
 			}});
@@ -101,7 +101,7 @@ public class RuleRestController {
     	if(searchForm.getRuleType() != -1) {
     		criteria.add(new HashMap<String, Object>()
 			{{
-			     put("field", "ruleType");
+			     put("field", "rule_type");
 			     put("op", "=");
 			     put("value", (searchForm.getRuleType() == 1));
 			}});
@@ -117,7 +117,7 @@ public class RuleRestController {
     	if(human_confidence_from != null || human_confidence_to != null) {
     		criteria.add(new HashMap<String, Object>()
 			{{
-			     put("field", "humanConfidence");
+			     put("field", "human_confidence");
 			     put("op", "BETWEEN");
 			     put("value", new Double[]{(human_confidence_from != null ? human_confidence_from : 0.0),
 			    		 (human_confidence_to != null ? human_confidence_to : 1.0)});
@@ -154,13 +154,13 @@ List<HashMap<String, Rule>> final_rule = new ArrayList<HashMap<String, Rule>>();
 	  		return final_rule;
 	  	}
 			
-			rule.setPremiseTriples(premiseTriples);
+			rule.setPremise_triples(premiseTriples);
 		}
 		
 		// Predicate
 		if(predicate != "") {    	
     	Atom triple = new Atom("subject", predicate, "object");
-    	rule.setConclusionTriple(triple);
+    	rule.setConclusion_triple(triple);
     	rule.setConclusion(predicate + "(subject,object)");
 		}
   	
@@ -183,10 +183,10 @@ List<HashMap<String, Rule>> final_rule = new ArrayList<HashMap<String, Rule>>();
   	Set<String> set_relations = Sets.newHashSet(rule.getPredicate());
     Set<RuleAtom> rule_atom = HornRule.readHornRule(rule.getPremise());
   	naive = new DynamicPruningRuleDiscovery();
-    Double score = naive.getRuleConfidence(rule_atom, set_relations, typeSubject, typeObject, rule.getRuleType());
+    Double score = naive.getRuleConfidence(rule_atom, set_relations, typeSubject, typeObject, rule.getRule_type());
     
     // Computed Confidence
-		rule.setComputedConfidence(score);
+		rule.setComputed_confidence(score);
 		rule.setHashcode(hashcode);
 		rule.setStatus(false);
 		
@@ -217,13 +217,13 @@ List<HashMap<String, Rule>> final_rule = new ArrayList<HashMap<String, Rule>>();
 	  		return final_rule;
 	  	}
 			
-			rule.setPremiseTriples(premiseTriples);
+			rule.setPremise_triples(premiseTriples);
 		}
 		
 		// Predicate
 		if(predicate != "") {    	
     	Atom triple = new Atom("subject", predicate, "object");
-    	rule.setConclusionTriple(triple);
+    	rule.setConclusion_triple(triple);
     	rule.setConclusion(predicate + "(subject,object)");
 		}
   		
@@ -246,10 +246,10 @@ List<HashMap<String, Rule>> final_rule = new ArrayList<HashMap<String, Rule>>();
   	Set<String> set_relations = Sets.newHashSet(rule.getPredicate());
     Set<RuleAtom> rule_atom = HornRule.readHornRule(rule.getPremise());
   	naive = new DynamicPruningRuleDiscovery();
-    Double score = naive.getRuleConfidence(rule_atom, set_relations, typeSubject, typeObject, rule.getRuleType());
+    Double score = naive.getRuleConfidence(rule_atom, set_relations, typeSubject, typeObject, rule.getRule_type());
     
     // Computed Confidence
-		rule.setComputedConfidence(score);		
+		rule.setComputed_confidence(score);		
   		
   	final_rule.add(new HashMap<String, Rule>()
 		{{
@@ -292,7 +292,7 @@ List<HashMap<String, Rule>> final_rule = new ArrayList<HashMap<String, Rule>>();
 		if(!searchForm.getKnowledgeBase().equals("none")) {
     		criteria.add(new HashMap<String, Object>()
 			{{
-			     put("field", "knowledgeBase");
+			     put("field", "knowledge_base");
 			     put("op", "=");
 			     put("value", searchForm.getKnowledgeBase());
 			}});
@@ -308,7 +308,7 @@ List<HashMap<String, Rule>> final_rule = new ArrayList<HashMap<String, Rule>>();
     	if(searchForm.getRuleType() != -1) {
     		criteria.add(new HashMap<String, Object>()
 			{{
-			     put("field", "ruleType");
+			     put("field", "rule_type");
 			     put("op", "=");
 			     put("value", (searchForm.getRuleType() == 1));
 			}});
@@ -326,7 +326,7 @@ List<HashMap<String, Rule>> final_rule = new ArrayList<HashMap<String, Rule>>();
     	if(human_confidence_from != null || human_confidence_to != null) {
     		criteria.add(new HashMap<String, Object>()
 			{{
-			     put("field", "humanConfidence");
+			     put("field", "human_confidence");
 			     put("op", "BETWEEN");
 			     put("value", new Double[]{(human_confidence_from != null ? human_confidence_from : 0.0),
 			    		 (human_confidence_to != null ? human_confidence_to : 1.0)});

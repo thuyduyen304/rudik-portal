@@ -47,9 +47,9 @@ $(document).ready(
             row_idx = parseInt(this.elements["rowIdx"].value);
             column_idx = parseInt(this.elements["columnIdx"].value);
             if(column_idx == 3) {
-            	params["qualityEvaluation"] = parseInt(this.elements["qualityEvaluation"].value);
+            	params["quality_evaluation"] = parseInt(this.elements["qualityEvaluation"].value);
             } else if(column_idx == 4) {
-            	params["humanConfidence"] = parseFloat(this.elements["humanConfidence"].value);
+            	params["human_confidence"] = parseFloat(this.elements["humanConfidence"].value);
             }
             table = $("#results-table").DataTable();
             $.ajax({
@@ -62,9 +62,9 @@ $(document).ready(
                 timeout: 600000,
                 success: function(modified_rule) {
                 	if(column_idx == 3) {
-                		cell_data = table.cell(row_idx, column_idx).data(modified_rule.qualityEvaluation).draw();
+                		cell_data = table.cell(row_idx, column_idx).data(modified_rule.quality_evaluation).draw();
                     } else if(column_idx == 4) {
-                    	cell_data = table.cell(row_idx, column_idx).data(modified_rule.humanConfidence).draw();
+                    	cell_data = table.cell(row_idx, column_idx).data(modified_rule.human_confidence).draw();
                     }
                     
                 },
@@ -180,7 +180,7 @@ function search_rules_submit() {
                         className: 'select-checkbox',
                         orderable: false
                     }, {
-                        "data": "ruleType",
+                        "data": "rule_type",
                         className: "dt-center",
                         "render": function(data, type, row, meta) {
                             if (type === 'display') {
@@ -197,7 +197,7 @@ function search_rules_submit() {
                         "data": "premise",
                         "render": function(data, type, row, meta) {
                             if (type === 'display') {
-                                if (row.ruleType == true) {
+                                if (row.rule_type == true) {
                                     data = trim_prefix(row.premise) + ' \u21D2 ' +
                                         trim_prefix(row.conclusion);
                                 } else {
@@ -211,7 +211,7 @@ function search_rules_submit() {
                             return data;
                         }
                     }, {
-                        "data": "qualityEvaluation",
+                        "data": "quality_evaluation",
                         className: "dt-center editable",
                         "render": function(data, type, row, meta) {
                             if (type === 'display') {
@@ -223,7 +223,7 @@ function search_rules_submit() {
                             return data;
                         }
                     }, {
-                        "data": "humanConfidence",
+                        "data": "human_confidence",
                         className: "dt-center editable",
                         "render": function(data, type, row, meta) {
                             if (type === 'display') {
@@ -235,7 +235,7 @@ function search_rules_submit() {
                             return data;
                         }
                     }, {
-                        "data": "computedConfidence",
+                        "data": "computed_confidence",
                         className: "dt-center",
                         "render": function(data, type, row, meta) {
                             if (type === 'display') {

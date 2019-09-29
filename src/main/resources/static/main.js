@@ -168,7 +168,7 @@ function search_rules_submit() {
                         className: 'select-checkbox',
                         orderable: false
                     }, {
-                        "data": "ruleType",
+                        "data": "rule_type",
                         className: "dt-center",
                         "render": function(data, type, row, meta) {
                             if (type === 'display') {
@@ -185,7 +185,7 @@ function search_rules_submit() {
                         "data": "premise",
                         "render": function(data, type, row, meta) {
                             if (type === 'display') {
-                                if (row.ruleType == true) {
+                                if (row.rule_type == true) {
                                     data = trim_prefix(row.premise) + ' \u21D2 ' +
                                         trim_prefix(row.conclusion);
                                 } else {
@@ -199,7 +199,7 @@ function search_rules_submit() {
                             return data;
                         }
                     }, {
-                        "data": "qualityEvaluation",
+                        "data": "quality_evaluation",
                         className: "dt-center editable",
                         "render": function(data, type, row, meta) {
                             if (type === 'display') {
@@ -211,7 +211,7 @@ function search_rules_submit() {
                             return data;
                         }
                     }, {
-                        "data": "humanConfidence",
+                        "data": "human_confidence",
                         className: "dt-center editable",
                         "render": function(data, type, row, meta) {
                             if (type === 'display') {
@@ -223,7 +223,7 @@ function search_rules_submit() {
                             return data;
                         }
                     }, {
-                        "data": "computedConfidence",
+                        "data": "computed_confidence",
                         className: "dt-center",
                         "render": function(data, type, row, meta) {
                             if (type === 'display') {
@@ -303,40 +303,40 @@ function search_rules_submit() {
 
             var html = '';
             var rules = new Object();
-            $.each(data, function(k, v) {
-                html += '<section class="popup-rule" id="popup-rule-' +
-                    v.ruleId + '" >' +
-                    '<pre>' + JSON.stringify(v, null, 4) + '</pre>' +
-                    '</section>';
-                rules[v.ruleId] = v;
-            });
+//            $.each(data, function(k, v) {
+//                html += '<section class="popup-rule" id="popup-rule-' +
+//                    v.ruleId + '" >' +
+//                    '<pre>' + JSON.stringify(v, null, 4) + '</pre>' +
+//                    '</section>';
+//                rules[v.ruleId] = v;
+//            });
 
             $('#rule-details').html(html);
             sessionStorage.rules = rules;
 
-            $(".popup-rule").dialog({
-                autoOpen: false,
-                resizable: false,
-                position: {
-                    my: "center top",
-                    at: "center",
-                    of: window
-                },
-                width: $(window).width() * 0.7,
-                height: 500,
-                open: function() {
-                    $('.ui-widget-overlay').addClass('custom-overlay');
-                },
-                title: "Rule detail",
-                show: {
-                    effect: "fade",
-                    duration: 100
-                },
-                hide: {
-                    effect: "fade",
-                    duration: 100
-                }
-            });
+//            $(".popup-rule").dialog({
+//                autoOpen: false,
+//                resizable: false,
+//                position: {
+//                    my: "center top",
+//                    at: "center",
+//                    of: window
+//                },
+//                width: $(window).width() * 0.7,
+//                height: 500,
+//                open: function() {
+//                    $('.ui-widget-overlay').addClass('custom-overlay');
+//                },
+//                title: "Rule detail",
+//                show: {
+//                    effect: "fade",
+//                    duration: 100
+//                },
+//                hide: {
+//                    effect: "fade",
+//                    duration: 100
+//                }
+//            });
 
 
         },
