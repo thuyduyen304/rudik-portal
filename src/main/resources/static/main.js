@@ -94,8 +94,50 @@ $(document).ready(
         });
 
         $("#results-table").on("click", "a.popup-opener", function() {
+        	$('#rule-details').html('');
             rule_id = $(this).data('ruleId');
-            $("#popup-rule-" + rule_id).dialog("open");
+            $.ajax({
+                type: "GET",
+                contentType: "application/json",
+                url: "/api/rules/" + rule_id,
+                dataType: 'json',
+                cache: false,
+                timeout: 600000,
+                success: function(data) {
+		            html = '<section class="popup-rule" id="popup-rule-' + rule_id + '" >' +
+	                '<pre>' + JSON.stringify(data, null, 4) + '</pre>' +
+	                '</section>';
+		            $('#rule-details').html(html);
+		            $(".popup-rule").dialog({
+    	                autoOpen: false,
+    	                resizable: false,
+    	                position: {
+    	                    my: "center top",
+    	                    at: "center",
+    	                    of: window
+    	                },
+    	                width: $(window).width() * 0.7,
+    	                height: 500,
+    	                open: function() {
+    	                    $('.ui-widget-overlay').addClass('custom-overlay');
+    	                },
+    	                title: "Rule Details",
+    	                show: {
+    	                    effect: "fade",
+    	                    duration: 100
+    	                },
+    	                hide: {
+    	                    effect: "fade",
+    	                    duration: 100
+    	                }
+    	            });
+		            $("#popup-rule-" + rule_id).dialog("open");
+                },
+                error: function(e) {
+                	var json = "<h4>Ajax Response</h4><pre>" + e.responseText + "</pre>";
+		            $('#appMsg').html(json);
+                }
+            });
         });
 
         $("#results-table").on("click", "td.editable", function() {
@@ -125,6 +167,63 @@ $(document).ready(
               
             }
           });
+        
+        $("#results-table").on("click", "td.dt-sparql-query", function() {
+        	$('#rule-details').html('');
+            var table = $("#results-table").DataTable();
+            cell_edit = this;
+            idx = table.cell(this).index();
+            row_data = table.rows(idx.row).data();
+            var params = {}
+            params = row_data[0].status;
+            
+            $.ajax({
+                type: "GET",
+                contentType: "application/json",
+                url: "/api/rules/" + row_data[0].ruleId + "/sparqlquery",
+                data: JSON.stringify(params),
+                dataType: 'json',
+                cache: false,
+                timeout: 600000,
+                success: function(data) {
+                	console.log(data)
+		            html = '<section style="color:#333333" class="popup-rule" id="popup-rule-' + row_data[0].ruleId + '-query" >' +
+	                '</section>';
+		            $('#rule-details').html(html);
+		            $('#popup-rule-' + row_data[0].ruleId + '-query').text(data.response);
+		            $(".popup-rule").dialog({
+    	                autoOpen: false,
+    	                resizable: false,
+    	                position: {
+    	                    my: "center top",
+    	                    at: "center",
+    	                    of: window
+    	                },
+    	                width: $(window).width() * 0.4,
+    	                height: 300,
+    	                open: function() {
+    	                    $('.ui-widget-overlay').addClass('custom-overlay');
+    	                },
+    	                title: "Rule's SPARQL query",
+    	                show: {
+    	                    effect: "fade",
+    	                    duration: 100
+    	                },
+    	                hide: {
+    	                    effect: "fade",
+    	                    duration: 100
+    	                }
+    	            });
+		            $("#popup-rule-" + row_data[0].ruleId + "-query").dialog("open");
+                },
+                error: function(e) {
+                	console.log(e.responseText);
+                	var json = "<h4>Ajax Response</h4><pre>" + e.responseText + "</pre>";
+		            $('#appMsg').html(json);
+                }
+            });
+
+        });
 
     });
 
@@ -234,10 +333,10 @@ function search_rules_submit() {
                         }
                     }, {
                         "data": "ruleId",
-                        className: "dt-center",
+                        className: "dt-center dt-sparql-query",
                         "render": function(data, type, row, meta) {
                             if (type === 'display') {
-                                data = '<a class="btn btn-info" role="button" href="/instance/all?rule_id=' + data + '" >Get instances</a>';
+                                data = '<a class="btn btn-sm btn-info" role="button" href="#" >SPARQL Query</a>';
                             }
 
                             return data;
@@ -355,7 +454,9 @@ function search_rules_submit() {
 
 function trim_prefix(str) {
     p1 = "http://dbpedia.org/ontology/";
-    return str.replace(new RegExp(p1, 'g'), "");
+    p2 = "http://yago-knowledge.org/resource/";
+//    return str.replaceAll({p1: '', p2: ''});
+    return str.replace(new RegExp(p1 + '|' + p2, 'g'), "");
 }
 
 function add_input_elm(idx, id, value) {

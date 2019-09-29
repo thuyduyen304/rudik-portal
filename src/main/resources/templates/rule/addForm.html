@@ -56,17 +56,19 @@
 					<div class="col-md-6">
 						<div>
 							<label for="knowledgeBase">Knowledge Base</label> <select
-								th:field="*{knowledgeBase}">
+								th:field="*{knowledge_base}">
 								<option th:value="none" th:text="--None--"></option>
-								<option th:each="kb: ${knowledgeBases}" th:value="${kb}"
-									th:text="${kb}"></option>
+								<option th:each="kb: ${knowledgeBases}" th:value="${kb.key}"
+									th:text="${kb.value}"></option>
 							</select>
 						</div>
 						<div>
-							<label for="sparql_endpoint">Sparql endpoint </label> <span id="sparql_endpoint"> http//localhost:8890/sparql </span>
+							<label for="sparql_endpoint">Sparql endpoint </label>
+							<input type="text" th:field="*{sparql_endpoint}" value="http//localhost:8890/sparql"></input>
 						</div>
 						<div>
-							<label for="graph_iri">Graph IRI </label> <span id="graph_iri">http://dbpedia.org</span>
+							<label for="graph_iri">Graph IRI </label>
+							<input type="text" th:field="*{graph_iri}" placeholder="http://dbpedia.org"></input>
 						</div>
 						<div>
 							<label for="predicate">Predicate</label> <select
@@ -78,7 +80,7 @@
 					<div class="col-md-4">
 						<div>
 							<label for="type">Rule Type</label> <select
-								th:field="*{ruleType}">
+								th:field="*{rule_type}">
 								<option th:each="rt: ${ruleTypes}" th:value="${rt.key}"
 									th:text="${rt.value}"></option>
 							</select>
@@ -96,12 +98,12 @@
 		            <div class="col-md-12">
 						<div>
 							<label for="type">Human Confidence</label> 
-							<input th:field="*{humanConfidence}"></input><i> Fill the value from 0 to 1.</i>
+							<input th:field="*{human_confidence}"></input><i> Fill the value from 0 to 1.</i>
 						</div>
 						
 						<div>
 							<label for="type">Quality Evaluation</label> 
-							<input th:field="*{qualityEvaluation}"></input><i> Fill the value from 1, 2, 3, 4, 5.</i>
+							<input th:field="*{quality_evaluation}"></input><i> Fill the value from 1, 2, 3, 4, 5.</i>
 						</div>
 
 					</div>		    

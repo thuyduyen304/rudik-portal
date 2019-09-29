@@ -48,17 +48,22 @@ public class InstanceController {
 	
 	private RuleDAL ruleDAL;
 	
-	private String rudikConfig;
+	private String dbpediaConfig;
 	
-	private Integer maxInstances = 15000;
+	private String yagoConfig;
+	
+	private Integer maxInstances = 5000;
 
-	public InstanceController(@Value("${app.rudikConfig}") String config, InstanceRepository instanceRepository, InstanceDAL instanceDAL,
+	public InstanceController(@Value("${app.rudikDbpediaConfig}") String dbpediaConfig, 
+			@Value("${app.rudikYagoConfig}") String yagoConfig, 
+			InstanceRepository instanceRepository, InstanceDAL instanceDAL,
 			RuleDAL ruleDAL) {
 		this.instanceRepository = instanceRepository;
 		this.instanceDAL = instanceDAL;
 		this.ruleDAL = ruleDAL;
 		
-		rudikConfig = config;
+		this.dbpediaConfig = dbpediaConfig;
+		this.yagoConfig = yagoConfig;
 	}
 
 	@RequestMapping(method = RequestMethod.GET, value = "/sample")
@@ -68,7 +73,12 @@ public class InstanceController {
 		List<Instance> instances = instanceDAL.getInstanceByRuleId(rule_id, "sample_instances");
 		
 		if(instances.size() == 0) {
-			// get from dbpedia
+			String rudikConfig = "";
+			// get from dbpedia or yago
+			if (rule.getKnowledge_base().equals("dbpedia"))
+				rudikConfig = dbpediaConfig;
+			else if (rule.getKnowledge_base().equals("yago3"))
+				rudikConfig = yagoConfig;
 			Map<String, List<RuleAtom>> rulesAtomsDict = new HashMap<>();
 	        Map<String, String> rules_entities_dict = new HashMap<>();
 	        List<String> returnResult = new ArrayList<>();
@@ -78,7 +88,7 @@ public class InstanceController {
 			HornRuleResult.RuleType type = rule.getRule_type() ? HornRuleResult.RuleType.positive : HornRuleResult.RuleType.negative;
 			RudikApi API = new RudikApi(rudikConfig,
                     5 * 60,
-                    true,
+                    false,
                     maxInstances);
 			
 			final RudikResult result = API.instantiateSingleRule(horn_rule, predicate, type, 20);

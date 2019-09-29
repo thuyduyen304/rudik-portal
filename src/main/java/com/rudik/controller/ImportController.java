@@ -49,7 +49,7 @@ public class ImportController {
     private KBPredicateSelector kbAnalysis;
     private DynamicPruningRuleDiscovery naive;
     
-    public ImportController(@Value("${app.rudikConfig}") String config) {
+    public ImportController(@Value("${app.rudikDbpediaConfig}") String config) {
     	ConfigurationFacility.setConfigurationFile(config);
     	kbAnalysis = new SparqlKBPredicateSelector();
     	naive = new DynamicPruningRuleDiscovery();
@@ -204,6 +204,7 @@ public class ImportController {
             						count_existing++;
             					} else {	        
             						rule.setHashcode(rule.hashCode());
+            						rule.setStatus(true);
             						ruleRepository.save(rule);
             						count_success++;
             					}

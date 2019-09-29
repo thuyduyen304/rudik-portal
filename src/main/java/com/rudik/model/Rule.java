@@ -223,7 +223,7 @@ public class Rule {
     	final int prime = 31;
 		int result = 1;
 //		result = prime * result + ((knowledgeBase == null) ? 0 : knowledgeBase.hashCode());
-//		result = prime * result + ((ruleType == null) ? 0 : ruleType.hashCode());
+		result = prime * result + ((rule_type == null) ? 0 : rule_type.hashCode());
 		result = prime * result + ((predicate == null) ? 0 : predicate.hashCode());
 		result = prime * result + ((premise_triples == null || premise_triples.size() == 0) ? 0 : premise_triples.hashCode());
 

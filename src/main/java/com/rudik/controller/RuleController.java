@@ -105,8 +105,14 @@ public class RuleController {
     
     @GetMapping(value = "/rule/add")
     public String showAddForm(Model model) {
-    	model.addAttribute("addForm", new AddForm());
-    	model.addAttribute("knowledgeBases", ruleDAL.getAllKnowledgeBase());
+    	model.addAttribute("addForm", new Rule());
+    	
+    	Map<String, String> knowledgeBases = new HashMap<String, String>() {{
+              put("dbpedia", "DbPedia");
+              put("yago3", "Yago3");
+          }};
+    	model.addAttribute("knowledgeBases", knowledgeBases);
+    	
     	Map<Integer, String> ruleTypes = new HashMap<Integer, String>() {{
       	put(-1, "--None--");
           put(0, "Negative");
@@ -210,8 +216,8 @@ public class RuleController {
     }
     
     @Secured({"ROLE_ADMIN"})
-    @RequestMapping(path = "/rule/import_from_alldbpedia", method = RequestMethod.GET)
-    public String importAdllDbpedia(@Value("${app.alldbpedia}") String path, ModelMap model) throws JsonIOException, IOException {
+    @RequestMapping(path = "/rule/import_pos_from_alldbpedia", method = RequestMethod.GET)
+    public String importPosAllDbpedia(@Value("${app.alldbpedia_pos}") String path, ModelMap model) throws JsonIOException, IOException {
     	BufferedReader reader;
     	String predicate = "";
 		Boolean output_flag = false;
@@ -252,7 +258,7 @@ public class RuleController {
 				    			// new predicate
 				    			String output = output_matcher.group(1);
 				    			// get rules
-			    				String[] rules = output.split(",(?=(\\s|http))");
+			    				String[] rules = output.split(",(?=(\\s|http://dbpedia.org/ontology/))");
 			    				for(String premise : rules) {
 			    					// create rule
 			    					Set<Atom> premise_triples = Parser.premise_to_atom_list(premise);
@@ -320,6 +326,142 @@ public class RuleController {
 		    			}
 		    			
 		    		}
+				}
+	    	
+				// read next line
+				line = reader.readLine();
+			}
+			reader.close();
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+      
+        model.addAttribute("msg", "Import " + count_success + " rules, ignore " + count_existing + " rules");
+        return "rule/info";
+        
+    }
+    
+    @Secured({"ROLE_ADMIN"})
+    @RequestMapping(path = "/rule/import_neg_from_alldbpedia", method = RequestMethod.GET)
+    public String importAdllDbpedia(@Value("${app.alldbpedia_neg}") String path, ModelMap model) throws JsonIOException, IOException {
+    	BufferedReader reader;
+    	String predicate = "";
+		Boolean output_flag = false;
+		Boolean type = false;
+		int count_existing = 0;
+		int count_success = 0;
+		try {
+			reader = new BufferedReader(new FileReader(path));
+			String line = reader.readLine();
+			
+			while (line != null) {
+				line = line.trim();
+				if (line.length() > 0) {
+					String predicate_pattern_str = "-------------------------\\[(\\D+)\\]";
+		    		Pattern predicate_pattern = Pattern.compile(predicate_pattern_str);
+		    		Matcher predicate_matcher = predicate_pattern.matcher(line);
+		    		
+		    		if(predicate_matcher.find()) {
+		    			// new predicate
+		    			predicate = predicate_matcher.group(1);
+		    		} else {
+		    			predicate_pattern_str = "-------------------------(\\D+)_\\d+";
+			    		predicate_pattern = Pattern.compile(predicate_pattern_str);
+			    		predicate_matcher = predicate_pattern.matcher(line);
+			    		
+			    		if(predicate_matcher.find()) {
+			    			// new predicate
+			    			predicate = predicate_matcher.group(1);
+			    		} else {
+			    			if (line.endsWith("--??FILLUP"))
+			    				line = line.replace("--??FILLUP", "");
+			    			
+			    			// check if it's output
+			    			if (line.equals("Output rules:")) {
+			    				// multilines
+			    				output_flag = true;
+			    			} else if (line.startsWith("Output rules:")) {
+			    				// one line
+			    				output_flag = false;
+			    				
+			    				String output_pattern_str = "\\[((.+)\\((.+)\\,(.+)\\))\\]";
+					    		Pattern output_pattern = Pattern.compile(output_pattern_str);
+					    		Matcher output_matcher = output_pattern.matcher(line);
+					    		
+					    		if(output_matcher.find()) {
+					    			// new predicate
+					    			String output = output_matcher.group(1);
+					    			// get rules
+				    				String[] rules = output.split(",(?=(\\s|http://dbpedia.org/ontology/))");
+				    				for(String premise : rules) {
+				    					// create rule
+				    					Set<Atom> premise_triples = Parser.premise_to_atom_list(premise);
+				    					
+				    					Rule rule = new Rule("rudik");
+			                			rule.setPremise(premise);
+			                			rule.setPredicate(predicate);
+			                			rule.setRule_type(type);
+			                			rule.setStatus(true);
+			                			rule.setComputed_confidence(-1.);
+			                			rule.setHuman_confidence(-1.);
+			                			rule.setKnowledge_base("dbpedia");
+			                			rule.setPremise_triples(premise_triples);
+			                			Atom conclusion = new Atom("subject", predicate, "object");
+			                    		rule.setConclusion_triple(conclusion);
+			                    		rule.setConclusion(conclusion.toString());
+
+			        					List<Rule> check_exist = ruleRepository.findByHashcode(rule.hashCode());
+			        					if (check_exist.size() > 0) {
+			        						//rule exist
+			        						count_existing++;
+			        					} else {	        
+			        						rule.setHashcode(rule.hashCode());
+			        						ruleRepository.save(rule);
+			        						count_success++;
+			        					}
+				    				}
+					    		}
+			    				
+			    				
+			    			} else if (output_flag) {
+			    				// check if this line is a premise
+			    	    		if(Parser.is_premise(line)) {
+			    	    			// create a new rule
+			    	    			String premise = line;
+			    	    			Set<Atom> premise_triples = Parser.premise_to_atom_list(premise);
+			    	    			
+			    	    			Rule rule = new Rule("rudik");
+		                			rule.setPremise(premise);
+		                			rule.setPredicate(predicate);
+		                			rule.setRule_type(type);
+		                			rule.setStatus(true);
+		                			rule.setComputed_confidence(-1.);
+		                			rule.setHuman_confidence(-1.);
+		                			rule.setKnowledge_base("dbpedia");
+		                			rule.setPremise_triples(premise_triples);
+		                			Atom conclusion = new Atom("subject", predicate, "object");
+		                    		rule.setConclusion_triple(conclusion);
+		                    		rule.setConclusion(conclusion.toString());
+
+		        					List<Rule> check_exist = ruleRepository.findByHashcode(rule.hashCode());
+		        					if (check_exist.size() > 0) {
+		        						//rule exist
+		        						count_existing++;
+		        					} else {	        
+		        						rule.setHashcode(rule.hashCode());
+		        						ruleRepository.save(rule);
+		        						count_success++;
+		        					}
+			    	    		} else {
+			    	    			output_flag = false;
+			    	    		}
+			    			} else {
+			    				output_flag = false;
+			    			}
+			    			
+			    		}
+		    		}
+		    		
 				}
 	    	
 				// read next line

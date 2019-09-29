@@ -1,9 +1,11 @@
 package com.rudik.controller;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.regex.Pattern;
 
@@ -50,15 +52,16 @@ public class RuleRestController {
 	private final RuleDAL ruleDAL;
 	
 	@Autowired
-  RuleRepository ruleRepository;
+	RuleRepository ruleRepository;
 
-  private DynamicPruningRuleDiscovery naive;
-  private KBPredicateSelector kbAnalysis;
+	private DynamicPruningRuleDiscovery naive;
+  	private KBPredicateSelector kbAnalysis;
+  	
+  	private String rudikDbpediaConfig = "";
+  	private String rudikYagoConfig = "";
 
-	public RuleRestController(@Value("${app.rudikConfig}") String config, RuleRepository ruleRepository, RuleDAL ruleDAL) {
+	public RuleRestController(RuleRepository ruleRepository, RuleDAL ruleDAL) {
 		this.ruleDAL = ruleDAL;
-		ConfigurationFacility.setConfigurationFile(config);
-		kbAnalysis = new SparqlKBPredicateSelector();
 	}
 	
 	@RequestMapping("/{knowledge_base}/predicates")
@@ -136,13 +139,15 @@ public class RuleRestController {
 	}
 	
 	@RequestMapping("add-rule")
-	public List<HashMap<String, Rule>> addRule(
-			@RequestBody Rule rule) {
-List<HashMap<String, Rule>> final_rule = new ArrayList<HashMap<String, Rule>>();
+	public List<HashMap<String, Rule>> addRule(@RequestBody Rule rule, 
+			@Value("${app.rudikDbpediaConfig}") String dbpediaConfig, 
+			@Value("${app.rudikYagoConfig}") String yagoConfig) {
+		System.out.println(rule);
+		List<HashMap<String, Rule>> final_rule = new ArrayList<HashMap<String, Rule>>();
 		
 		String predicate = rule.getPredicate();  	
-  	String premise = rule.getPremise();
-  	// Premise
+	  	String premise = rule.getPremise();
+	  	// Premise
 		if(premise != "") {
 			Set<Atom> premiseTriples = getPremiseTriples(premise);	 		
 			if (premiseTriples.isEmpty()) {  		
@@ -165,27 +170,33 @@ List<HashMap<String, Rule>> final_rule = new ArrayList<HashMap<String, Rule>>();
 		}
   	
 		Integer hashcode = rule.hashCode();
-  	List<Rule> check_exist = ruleRepository.findByHashcode(hashcode);
+		List<Rule> check_exist = ruleRepository.findByHashcode(hashcode);
 		if (check_exist.size() > 0) {
 			//rule exist
 			final_rule.add(new HashMap<String, Rule>()
-  		{{
-  			put("exist", check_exist.get(0));
-  		}});
-  		
-  		return final_rule;
+	  		{{
+	  			put("exist", check_exist.get(0));
+	  		}});
+	  		
+	  		return final_rule;
 		} 
  		 		
-  	// Check score.
-  	Pair<String, String> subjectObjectType = kbAnalysis.getPredicateTypes(rule.getPredicate());
-  	String typeSubject = subjectObjectType.getLeft();
-    String typeObject = subjectObjectType.getRight();
-  	Set<String> set_relations = Sets.newHashSet(rule.getPredicate());
-    Set<RuleAtom> rule_atom = HornRule.readHornRule(rule.getPremise());
-  	naive = new DynamicPruningRuleDiscovery();
-    Double score = naive.getRuleConfidence(rule_atom, set_relations, typeSubject, typeObject, rule.getRule_type());
-    
-    // Computed Confidence
+		// Check score.
+		String config = dbpediaConfig;
+		if (rule.getKnowledge_base().equals("yago3")) {
+			config = yagoConfig;
+		}
+		ConfigurationFacility.setConfigurationFile(config);
+		kbAnalysis = new SparqlKBPredicateSelector();
+	  	Pair<String, String> subjectObjectType = kbAnalysis.getPredicateTypes(rule.getPredicate());
+	  	String typeSubject = subjectObjectType.getLeft();
+	    String typeObject = subjectObjectType.getRight();
+	  	Set<String> set_relations = Sets.newHashSet(rule.getPredicate());
+	    Set<RuleAtom> rule_atom = HornRule.readHornRule(rule.getPremise());
+	  	naive = new DynamicPruningRuleDiscovery();
+	    Double score = naive.getRuleConfidence(rule_atom, set_relations, typeSubject, typeObject, rule.getRule_type());
+	    
+	    // Computed Confidence
 		rule.setComputed_confidence(score);
 		rule.setHashcode(hashcode);
 		rule.setStatus(false);
@@ -200,12 +211,15 @@ List<HashMap<String, Rule>> final_rule = new ArrayList<HashMap<String, Rule>>();
 	}
 	
 	@RequestMapping("get-score")
-	public List<HashMap<String, Rule>> getScore(@RequestBody Rule rule) {
+	public List<HashMap<String, Rule>> getScore(@RequestBody Rule rule,
+			@Value("${app.rudikDbpediaConfig}") String dbpediaConfig, 
+			@Value("${app.rudikYagoConfig}") String yagoConfig) {
+		System.out.println(rule);
 		List<HashMap<String, Rule>> final_rule = new ArrayList<HashMap<String, Rule>>();
 		
 		String predicate = rule.getPredicate();  	
-  	String premise = rule.getPremise();
-  	// Premise
+		String premise = rule.getPremise();
+		// Premise
 		if(premise != "") {
 			Set<Atom> premiseTriples = getPremiseTriples(premise);	 		
 			if (premiseTriples.isEmpty()) {  		
@@ -227,8 +241,8 @@ List<HashMap<String, Rule>> final_rule = new ArrayList<HashMap<String, Rule>>();
     	rule.setConclusion(predicate + "(subject,object)");
 		}
   		
-  	List<Rule> check_exist = ruleRepository.findByHashcode(rule.hashCode());
-  	System.out.println("test hash:" + rule.hashCode());
+		List<Rule> check_exist = ruleRepository.findByHashcode(rule.hashCode());
+		System.out.println("test hash:" + rule.hashCode());
 		if (check_exist.size() > 0) {
 			//rule exist
 			final_rule.add(new HashMap<String, Rule>()
@@ -239,19 +253,27 @@ List<HashMap<String, Rule>> final_rule = new ArrayList<HashMap<String, Rule>>();
   		return final_rule;
 		} 
  		 		
-  	// Check score.
-  	Pair<String, String> subjectObjectType = kbAnalysis.getPredicateTypes(rule.getPredicate());
-  	String typeSubject = subjectObjectType.getLeft();
-    String typeObject = subjectObjectType.getRight();
-  	Set<String> set_relations = Sets.newHashSet(rule.getPredicate());
-    Set<RuleAtom> rule_atom = HornRule.readHornRule(rule.getPremise());
-  	naive = new DynamicPruningRuleDiscovery();
-    Double score = naive.getRuleConfidence(rule_atom, set_relations, typeSubject, typeObject, rule.getRule_type());
+	  	// Check score.
+		String config = dbpediaConfig;
+		if (rule.getKnowledge_base().equals("yago3")) {
+			config = yagoConfig;
+		}
+		ConfigurationFacility.setConfigurationFile(config);
+		kbAnalysis = new SparqlKBPredicateSelector();
+	  	Pair<String, String> subjectObjectType = kbAnalysis.getPredicateTypes(rule.getPredicate());
+	  	String typeSubject = subjectObjectType.getLeft();
+	    String typeObject = subjectObjectType.getRight();
+	  	Set<String> set_relations = Sets.newHashSet(rule.getPredicate());
+	    Set<RuleAtom> rule_atom = HornRule.readHornRule(rule.getPremise());
+	  	naive = new DynamicPruningRuleDiscovery();
+	  	System.out.println(rule_atom);
+	  	System.out.println(rule.getRule_type());
+	    Double score = naive.getRuleConfidence(rule_atom, set_relations, typeSubject, typeObject, rule.getRule_type());
     
-    // Computed Confidence
+	    // Computed Confidence
 		rule.setComputed_confidence(score);		
   		
-  	final_rule.add(new HashMap<String, Rule>()
+		final_rule.add(new HashMap<String, Rule>()
 		{{
 			put(String.valueOf(score), rule);
 		}});
@@ -392,6 +414,32 @@ List<HashMap<String, Rule>> final_rule = new ArrayList<HashMap<String, Rule>>();
 			i++;
 		}
 		
-		return "done";
+		return "done for " + i + " rules";
     }
+	
+	@RequestMapping("/{id}")
+	public Rule getRule(@PathVariable(value="id") String id) {
+		return ruleDAL.getRuleById(id);
+	}
+	
+	@RequestMapping("/{id}/sparqlquery")
+	public Map<String, String> getSparqlQuery(@PathVariable(value="id") String id, 
+			@Value("${app.rudikDbpediaConfig}") String dbpediaConfig, 
+			@Value("${app.rudikYagoConfig}") String yagoConfig) {
+		Rule rule = ruleDAL.getRuleById(id);
+		String config = dbpediaConfig;
+		if (rule.getKnowledge_base().equals("yago3")) {
+			config = yagoConfig;
+		}
+		ConfigurationFacility.setConfigurationFile(config);
+		kbAnalysis = new SparqlKBPredicateSelector();
+	  	Pair<String, String> subjectObjectType = kbAnalysis.getPredicateTypes(rule.getPredicate());
+	  	String typeSubject = subjectObjectType.getLeft();
+	    String typeObject = subjectObjectType.getRight();
+	  	Set<String> set_relations = Sets.newHashSet(rule.getPredicate());
+	    Set<RuleAtom> rule_atom = HornRule.readHornRule(rule.getPremise());
+	  	naive = new DynamicPruningRuleDiscovery();
+	  	String query = naive.getSparqlExecutor().generateHornRuleQueryInstantiation(set_relations, rule_atom, typeSubject, typeObject, true, rule.getRule_type(), 10);
+		return Collections.singletonMap("response", query);
+	}
 }

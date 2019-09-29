@@ -1,6 +1,7 @@
 package com.rudik.dal;
 
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 
@@ -67,7 +68,7 @@ public class RuleDALImpl implements RuleDAL {
 	@Override
 	public List<String> getAllPredicates(String knowledge_base) {
 		// TODO Auto-generated method stub
-		if (knowledge_base == "yago3")
+		if (knowledge_base.equals("yago3"))
 	    	  knowledge_base = "yago";
 		BasicDBObject o = new BasicDBObject("knowledge_base", "dbpedia");
 		List<String> predicates = new ArrayList<String>();
@@ -78,6 +79,7 @@ public class RuleDALImpl implements RuleDAL {
 	      if(item.contains(knowledge_base))
 	    	  predicates.add(item);
 	    } 
+	    predicates.sort(Comparator.naturalOrder());
 		return predicates;
 	}
 	

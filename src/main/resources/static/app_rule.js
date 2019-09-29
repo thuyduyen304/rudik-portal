@@ -86,8 +86,50 @@ $(document).ready(
         });
 
         $("#results-table").on("click", "a.popup-opener", function() {
+        	$('#rule-details').html('');
             rule_id = $(this).data('ruleId');
-            $("#popup-rule-" + rule_id).dialog("open");
+            $.ajax({
+                type: "GET",
+                contentType: "application/json",
+                url: "/api/rules/" + rule_id,
+                dataType: 'json',
+                cache: false,
+                timeout: 600000,
+                success: function(data) {
+		            html = '<section class="popup-rule" id="popup-rule-' + rule_id + '" >' +
+	                '<pre>' + JSON.stringify(data, null, 4) + '</pre>' +
+	                '</section>';
+		            $('#rule-details').html(html);
+		            $(".popup-rule").dialog({
+    	                autoOpen: false,
+    	                resizable: false,
+    	                position: {
+    	                    my: "center top",
+    	                    at: "center",
+    	                    of: window
+    	                },
+    	                width: $(window).width() * 0.7,
+    	                height: 500,
+    	                open: function() {
+    	                    $('.ui-widget-overlay').addClass('custom-overlay');
+    	                },
+    	                title: "Rule Details",
+    	                show: {
+    	                    effect: "fade",
+    	                    duration: 100
+    	                },
+    	                hide: {
+    	                    effect: "fade",
+    	                    duration: 100
+    	                }
+    	            });
+		            $("#popup-rule-" + rule_id).dialog("open");
+                },
+                error: function(e) {
+                	var json = "<h4>Ajax Response</h4><pre>" + e.responseText + "</pre>";
+		            $('#appMsg').html(json);
+                }
+            });
         });
 
         $("#results-table").on("click", "td.editable", function() {
@@ -250,12 +292,21 @@ function search_rules_submit() {
                         "render": function(data, type, row, meta) {
                         	if (type === 'display') {
                             	if (data == true) {
-                            		data = '<a class="btn btn-cancel" role="button">Cancel</a>';
+                            		data = '<a class="rule-op btn btn-sm btn-cancel" role="button">Cancel</a>';
                                 } else {
-                                	data = '<a class="btn btn-info" role="button">Approve</a>';
+                                	data = '<a class="rule-op btn btn-sm btn-info" role="button">Approve</a>';
                                 }
                             }
                             return data;
+                        }
+                    }, {
+                        "data": "ruleId",
+                        className: "dt-ruleId",
+                        "render": function(data, type, row, meta) {
+                        	if (type === 'display') {
+                        		return '<a class="btn btn-sm btn-eval" role="button" href="#' + row.ruleId + '">Evaluate</a>';
+                            }
+                        	return data;
                         }
                     }],
                     select: {
@@ -352,42 +403,42 @@ function search_rules_submit() {
                 });
             }
 
-            var html = '';
-            var rules = new Object();
-            $.each(data, function(k, v) {
-                html += '<section class="popup-rule" id="popup-rule-' +
-                    v.ruleId + '" >' +
-                    '<pre>' + JSON.stringify(v, null, 4) + '</pre>' +
-                    '</section>';
-                rules[v.ruleId] = v;
-            });
+//            var html = '';
+//            var rules = new Object();
+//            $.each(data, function(k, v) {
+//                html += '<section class="popup-rule" id="popup-rule-' +
+//                    v.ruleId + '" >' +
+//                    '<pre>' + JSON.stringify(v, null, 4) + '</pre>' +
+//                    '</section>';
+//                rules[v.ruleId] = v;
+//            });
 
-            $('#rule-details').html(html);
-            sessionStorage.rules = rules;
+//            $('#rule-details').html(html);
+//            sessionStorage.rules = rules;
 
-            $(".popup-rule").dialog({
-                autoOpen: false,
-                resizable: false,
-                position: {
-                    my: "center top",
-                    at: "center",
-                    of: window
-                },
-                width: $(window).width() * 0.7,
-                height: 500,
-                open: function() {
-                    $('.ui-widget-overlay').addClass('custom-overlay');
-                },
-                title: "Rule detail",
-                show: {
-                    effect: "fade",
-                    duration: 100
-                },
-                hide: {
-                    effect: "fade",
-                    duration: 100
-                }
-            });
+//            $(".popup-rule").dialog({
+//                autoOpen: false,
+//                resizable: false,
+//                position: {
+//                    my: "center top",
+//                    at: "center",
+//                    of: window
+//                },
+//                width: $(window).width() * 0.7,
+//                height: 500,
+//                open: function() {
+//                    $('.ui-widget-overlay').addClass('custom-overlay');
+//                },
+//                title: "Rule detail",
+//                show: {
+//                    effect: "fade",
+//                    duration: 100
+//                },
+//                hide: {
+//                    effect: "fade",
+//                    duration: 100
+//                }
+//            });
 
 
         },
@@ -408,7 +459,8 @@ function search_rules_submit() {
 
 function trim_prefix(str) {
     p1 = "http://dbpedia.org/ontology/";
-    return str.replace(new RegExp(p1, 'g'), "");
+    p2 = "http://yago-knowledge.org/resource/";
+    return str.replace(new RegExp(p1 + '|' + p2, 'g'), "");
 }
 
 function add_input_elm(idx, id, value) {
@@ -434,25 +486,64 @@ function add_input_elm(idx, id, value) {
     return html;
 }
 
-function displayVotes(ruleid) {
+function displayVotes(rule_id) {
 	$.ajax({
         type: "GET",
         contentType: "application/json",
-        url: "/api/rules/" + ruleid + "/rating",
+        url: "/api/rules/" + rule_id + "/rating",
         dataType: 'json',
         cache: false,
         timeout: 600000,
         success: function(votes) {
-        	console.log("test");
-        	console.log(votes);
-        	text = "<div><h3>Users votes:</h3>"
-        	votes.forEach(function(item) {
-        		text += "<div> Rating " + item.rating + ": " + item.total + " vote(s)</div>";
-        	});
-        	text += "</div>";
-        	var w = window.open('', '', 'width=400,height=200,resizeable,scrollbars');
-            w.document.write(text);
-            w.document.close(); // needed for chrome and safari
+//        	console.log("test");
+//        	console.log(votes);
+//        	text = "<div><h3>Users votes:</h3>"
+//        	votes.forEach(function(item) {
+//        		text += "<div> Rating " + item.rating + ": " + item.total + " vote(s)</div>";
+//        	});
+//        	text += "</div>";
+//        	var w = window.open('', '', 'width=400,height=200,resizeable,scrollbars');
+//            w.document.write(text);
+//            w.document.close(); // needed for chrome and safari
+        	$('#rule-details').html('');
+        	if (votes.length > 0) {
+        		text = "<div>Number of votes corresponding to each rating:</div>"
+                	votes.forEach(function(item) {
+                		text += "<div> Rating " + item.rating + ": " + item.total + " vote(s)</div>";
+                	});
+                	text += "</div>"
+        	} else {
+        		text = "<div>This rule has no votes.</div>"
+        	}
+        	
+            html = '<section style="color:#333333" class="popup-rule" id="popup-rule-' + rule_id + '-vote" >' +
+            text + '</section>';
+            console.log(html);
+            $('#rule-details').html(html);
+            $("#popup-rule-" + rule_id + "-vote").dialog({
+                autoOpen: false,
+                resizable: false,
+                position: {
+                    my: "center top",
+                    at: "center",
+                    of: window
+                },
+                width: $(window).width() * 0.4,
+                height: 200,
+                open: function() {
+                    $('.ui-widget-overlay').addClass('custom-overlay');
+                },
+                title: "Users' Votes",
+                show: {
+                    effect: "fade",
+                    duration: 100
+                },
+                hide: {
+                    effect: "fade",
+                    duration: 100
+                }
+            });
+            $("#popup-rule-" + rule_id + "-vote").dialog("open");
         },
         error: function(e) {
         	console.log("ERROR : ", e);
