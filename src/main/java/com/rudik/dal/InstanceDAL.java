@@ -14,4 +14,7 @@ public interface InstanceDAL {
 	Instance addNewInstance(Instance inst, String collection);
 	
 	Instance updateLabel(String instance_id, Instance changes);
+	
+	Instance updateInstance(Instance inst);
+
 }

@@ -55,13 +55,13 @@ public class InstanceController {
 	private Integer maxInstances = 5000;
 
 	public InstanceController(@Value("${app.rudikDbpediaConfig}") String dbpediaConfig, 
-			@Value("${app.rudikYagoConfig}") String yagoConfig, 
+			@Value("${app.rudikYagoConfig}") String yagoConfig, @Value("${app.rudikMaxInst}") int maxInst, 
 			InstanceRepository instanceRepository, InstanceDAL instanceDAL,
 			RuleDAL ruleDAL) {
 		this.instanceRepository = instanceRepository;
 		this.instanceDAL = instanceDAL;
 		this.ruleDAL = ruleDAL;
-		
+		this.maxInstances = maxInst;
 		this.dbpediaConfig = dbpediaConfig;
 		this.yagoConfig = yagoConfig;
 	}

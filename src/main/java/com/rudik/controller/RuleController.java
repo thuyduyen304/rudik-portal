@@ -482,6 +482,7 @@ public class RuleController {
         
     }
 
+    @Secured({"ROLE_ADMIN"})
     @GetMapping(value = "/rule_sample/{id}")
     public String sample_instances(Model model, @PathVariable(value="id") String rule_id) {
     	Rule rule = ruleDAL.getRuleById(rule_id);

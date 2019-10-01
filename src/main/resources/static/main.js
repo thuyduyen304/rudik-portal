@@ -168,29 +168,23 @@ $(document).ready(
             }
           });
         
-        $("#results-table").on("click", "td.dt-sparql-query", function() {
+        $("#results-table").on("click", "td.dt-operator a.btn-rule-query", function() {
         	$('#rule-details').html('');
-            var table = $("#results-table").DataTable();
-            cell_edit = this;
-            idx = table.cell(this).index();
-            row_data = table.rows(idx.row).data();
-            var params = {}
-            params = row_data[0].status;
-            
+        	ruleId = this.dataset.ruleid;
+            console.log(ruleId);
             $.ajax({
                 type: "GET",
                 contentType: "application/json",
-                url: "/api/rules/" + row_data[0].ruleId + "/sparqlquery",
-                data: JSON.stringify(params),
+                url: "/api/rules/" + ruleId + "/sparqlquery",
                 dataType: 'json',
                 cache: false,
                 timeout: 600000,
                 success: function(data) {
                 	console.log(data)
-		            html = '<section style="color:#333333" class="popup-rule" id="popup-rule-' + row_data[0].ruleId + '-query" >' +
+		            html = '<section style="color:#333333" class="popup-rule" id="popup-rule-' + ruleId + '-query" >' +
 	                '</section>';
 		            $('#rule-details').html(html);
-		            $('#popup-rule-' + row_data[0].ruleId + '-query').text(data.response);
+		            $('#popup-rule-' + ruleId + '-query').text(data.response);
 		            $(".popup-rule").dialog({
     	                autoOpen: false,
     	                resizable: false,
@@ -214,7 +208,7 @@ $(document).ready(
     	                    duration: 100
     	                }
     	            });
-		            $("#popup-rule-" + row_data[0].ruleId + "-query").dialog("open");
+		            $("#popup-rule-" + ruleId + "-query").dialog("open");
                 },
                 error: function(e) {
                 	console.log(e.responseText);
@@ -315,8 +309,7 @@ function search_rules_submit() {
                         "render": function(data, type, row, meta) {
                             if (type === 'display') {
                                 data = '<div data-toggle="tooltip" data-placement="top" title="Click to edit">' +
-                                	'<a href="/instance/sample?rule_id=' + row.ruleId + '" >' + data + '</a>' +
-                                	'</div>';
+                                	data + '</div>';
                             }
 
                             return data;
@@ -333,10 +326,11 @@ function search_rules_submit() {
                         }
                     }, {
                         "data": "ruleId",
-                        className: "dt-center dt-sparql-query",
+                        className: "dt-center dt-operator",
                         "render": function(data, type, row, meta) {
                             if (type === 'display') {
-                                data = '<a class="btn btn-sm btn-info" role="button" href="#" >SPARQL Query</a>';
+                            	data = '<a class="btn btn-sm btn-info" role="button" href="/instance/sample?rule_id=' + row.ruleId + '" >Sample</a>';
+                                data += '<a class="btn btn-sm btn-rule-query" role="button" href="#" data-ruleid="' + row.ruleId + '">SPARQL Query</a>';
                             }
 
                             return data;

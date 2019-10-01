@@ -36,6 +36,7 @@ import com.rudik.model.Atom;
 import com.rudik.model.Rule;
 import com.rudik.model.Vote;
 import com.rudik.model.VotingCount;
+import com.rudik.utils.Parser;
 
 import asu.edu.rule_miner.rudik.configuration.ConfigurationFacility;
 import asu.edu.rule_miner.rudik.model.horn_rule.HornRule;
@@ -56,9 +57,6 @@ public class RuleRestController {
 
 	private DynamicPruningRuleDiscovery naive;
   	private KBPredicateSelector kbAnalysis;
-  	
-  	private String rudikDbpediaConfig = "";
-  	private String rudikYagoConfig = "";
 
 	public RuleRestController(RuleRepository ruleRepository, RuleDAL ruleDAL) {
 		this.ruleDAL = ruleDAL;
@@ -141,7 +139,7 @@ public class RuleRestController {
 	@RequestMapping("add-rule")
 	public List<HashMap<String, Rule>> addRule(@RequestBody Rule rule, 
 			@Value("${app.rudikDbpediaConfig}") String dbpediaConfig, 
-			@Value("${app.rudikYagoConfig}") String yagoConfig) {
+			@Value("${app.rudikYagoConfig}") String yagoConfig) throws Exception {
 		System.out.println(rule);
 		List<HashMap<String, Rule>> final_rule = new ArrayList<HashMap<String, Rule>>();
 		
@@ -149,7 +147,7 @@ public class RuleRestController {
 	  	String premise = rule.getPremise();
 	  	// Premise
 		if(premise != "") {
-			Set<Atom> premiseTriples = getPremiseTriples(premise);	 		
+			Set<Atom> premiseTriples = Parser.premise_to_atom_list(premise); // getPremiseTriples(premise);	 		
 			if (premiseTriples.isEmpty()) {  		
 	  		final_rule.add(new HashMap<String, Rule>()
 	  		{{
@@ -213,7 +211,7 @@ public class RuleRestController {
 	@RequestMapping("get-score")
 	public List<HashMap<String, Rule>> getScore(@RequestBody Rule rule,
 			@Value("${app.rudikDbpediaConfig}") String dbpediaConfig, 
-			@Value("${app.rudikYagoConfig}") String yagoConfig) {
+			@Value("${app.rudikYagoConfig}") String yagoConfig) throws Exception {
 		System.out.println(rule);
 		List<HashMap<String, Rule>> final_rule = new ArrayList<HashMap<String, Rule>>();
 		
@@ -221,7 +219,7 @@ public class RuleRestController {
 		String premise = rule.getPremise();
 		// Premise
 		if(premise != "") {
-			Set<Atom> premiseTriples = getPremiseTriples(premise);	 		
+			Set<Atom> premiseTriples = Parser.premise_to_atom_list(premise); // getPremiseTriples(premise);	 		
 			if (premiseTriples.isEmpty()) {  		
 	  		final_rule.add(new HashMap<String, Rule>()
 	  		{{
@@ -442,4 +440,20 @@ public class RuleRestController {
 	  	String query = naive.getSparqlExecutor().generateHornRuleQueryInstantiation(set_relations, rule_atom, typeSubject, typeObject, true, rule.getRule_type(), 10);
 		return Collections.singletonMap("response", query);
 	}
+	
+	@Secured({"ROLE_ADMIN"})
+	@RequestMapping({"/update_premise"})
+    public String updatePremise() {
+		List<Rule> rules = ruleDAL.getAllRules();
+		int i = 0;
+		for(Rule r: rules) {
+			String premise = r.getPremise().trim();
+			premise = premise.replace("  ", " ");
+			r.setPremise(premise);
+			ruleDAL.updateRule(r);
+			i++;
+		}
+		
+		return "done for " + i + " rules";
+    }
 }

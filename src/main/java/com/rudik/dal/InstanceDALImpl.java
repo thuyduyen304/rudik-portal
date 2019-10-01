@@ -19,7 +19,7 @@ public class InstanceDALImpl implements InstanceDAL {
 
 	@Override
 	public List<Instance> getAllInstances() {
-		return mongoTemplate.findAll(Instance.class);
+		return mongoTemplate.findAll(Instance.class, "sample_instances");
 	}
 
 	@Override
@@ -52,6 +52,12 @@ public class InstanceDALImpl implements InstanceDAL {
 		
 		mongoTemplate.save(instance, "sample_instances");
 		return instance;
+	}
+	
+	@Override
+	public Instance updateInstance(Instance inst) {
+	    this.mongoTemplate.save(inst, "sample_instances");
+	    return inst;
 	}
 	
 	

@@ -143,10 +143,9 @@ $(document).ready(
             $(this).html(form_elm);
         });
         
-        $("#results-table").on("click", "td.dt-status", function() {
+        $("#results-table").on("click", "td.dt-status a.rule-op", function() {
             var table = $("#results-table").DataTable();
-            cell_edit = this;
-            idx = table.cell(this).index();
+            idx = table.cell(this.parentNode).index();
             row_data = table.rows(idx.row).data();
             var params = {}
             params = row_data[0].status;
@@ -270,8 +269,7 @@ function search_rules_submit() {
                         "render": function(data, type, row, meta) {
                             if (type === 'display') {
                                 data = '<div data-toggle="tooltip" data-placement="top" title="Click to edit">' +
-                                	'<a href="/instance/sample?rule_id=' + row.ruleId + '" >' + data + '</a>' +
-                                	'</div>';
+                                	data + '</div>';
                             }
 
                             return data;
@@ -294,19 +292,11 @@ function search_rules_submit() {
                             	if (data == true) {
                             		data = '<a class="rule-op btn btn-sm btn-cancel" role="button">Cancel</a>';
                                 } else {
-                                	data = '<a class="rule-op btn btn-sm btn-info" role="button">Approve</a>';
+                                	data = '<a class="rule-op btn btn-sm" role="button">Approve</a>';
                                 }
+                            	data += '<a class="btn btn-sm btn-info btn-eval" role="button" href="/rule_sample/' + row.ruleId + '">Evaluate</a>';
                             }
                             return data;
-                        }
-                    }, {
-                        "data": "ruleId",
-                        className: "dt-ruleId",
-                        "render": function(data, type, row, meta) {
-                        	if (type === 'display') {
-                        		return '<a class="btn btn-sm btn-eval" role="button" href="#' + row.ruleId + '">Evaluate</a>';
-                            }
-                        	return data;
                         }
                     }],
                     select: {

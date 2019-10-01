@@ -4,7 +4,8 @@ $(document).ready(
 		var ruleid = sPageURL.match(/rule_sample\/(.*)$/)[1];
     	if( $('#instance_samples #resultsBlock'))        
     	{
-    		
+    		var msg = "<pre>Generating instances... Please wait</pre>";
+            $('#appMsg').html(msg);
     		var hc = 1;
 	    	$.ajax({
 	    		type: "GET",
@@ -14,6 +15,7 @@ $(document).ready(
 	            cache: false,
 	            timeout: 600000,
 	            success: function(data) {
+	            	$('#appMsg').html('');
 	            	$.each(data, function(i, inst) {
 				        if (inst.label == -1) {
 				        	hc = 0;
@@ -90,11 +92,7 @@ $(document).ready(
 	                if(httpObj.status==401 || httpObj.status==403)
 	                	location.href='/login';
 	                else {
-	                	var json = "<h4>Ajax Response</h4><pre>" + e.responseText +
-	                    "</pre>";
-	    	            $('#resultsBlock').html(json);
-	    	
-	    	            console.log("ERROR : ", e);
+	                	$('#appMsg').html('Error. Please try again.');
 	                }
 	            }
 	    	});
@@ -204,5 +202,8 @@ function add_input_elm(idx, id, value) {
 
 function trim_prefix(str) {
     p1 = "http://dbpedia.org/ontology/";
-    return str.replace(new RegExp(p1, 'g'), "");
+    p2 = "http://dbpedia.org/resource/";
+//    p3 = "http://yago-knowledge.org/ontology/";
+    p4 = "http://yago-knowledge.org/resource/";
+    return str.replace(new RegExp(p1 + '|' + p2 + '|' + p4, 'g'), "");
 }
