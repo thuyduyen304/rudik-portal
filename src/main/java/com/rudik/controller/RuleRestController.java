@@ -37,6 +37,7 @@ import com.rudik.model.Rule;
 import com.rudik.model.Vote;
 import com.rudik.model.VotingCount;
 import com.rudik.utils.Parser;
+import com.rudik.utils.Utils;
 
 import asu.edu.rule_miner.rudik.configuration.ConfigurationFacility;
 import asu.edu.rule_miner.rudik.model.horn_rule.HornRule;
@@ -54,6 +55,15 @@ public class RuleRestController {
 	
 	@Autowired
 	RuleRepository ruleRepository;
+	
+	@Value("${app.rudikYagoConfig}")
+	private String yagoConfig;
+	
+	@Value("${app.rudikDbpediaConfig}")
+	private String dbpediaConfig;
+	
+	@Value("${app.rudikWikidataConfig}")
+	private String wikidataConfig;
 
 	private DynamicPruningRuleDiscovery naive;
   	private KBPredicateSelector kbAnalysis;
@@ -137,9 +147,7 @@ public class RuleRestController {
 	}
 	
 	@RequestMapping("add-rule")
-	public List<HashMap<String, Rule>> addRule(@RequestBody Rule rule, 
-			@Value("${app.rudikDbpediaConfig}") String dbpediaConfig, 
-			@Value("${app.rudikYagoConfig}") String yagoConfig) throws Exception {
+	public List<HashMap<String, Rule>> addRule(@RequestBody Rule rule) throws Exception {
 		System.out.println(rule);
 		List<HashMap<String, Rule>> final_rule = new ArrayList<HashMap<String, Rule>>();
 		
@@ -180,10 +188,7 @@ public class RuleRestController {
 		} 
  		 		
 		// Check score.
-		String config = dbpediaConfig;
-		if (rule.getKnowledge_base().equals("yago3")) {
-			config = yagoConfig;
-		}
+		String config = Utils.get_config_from_kb(rule.getKnowledge_base(), yagoConfig, dbpediaConfig, wikidataConfig);
 		ConfigurationFacility.setConfigurationFile(config);
 		kbAnalysis = new SparqlKBPredicateSelector();
 	  	Pair<String, String> subjectObjectType = kbAnalysis.getPredicateTypes(rule.getPredicate());
@@ -209,9 +214,7 @@ public class RuleRestController {
 	}
 	
 	@RequestMapping("get-score")
-	public List<HashMap<String, Rule>> getScore(@RequestBody Rule rule,
-			@Value("${app.rudikDbpediaConfig}") String dbpediaConfig, 
-			@Value("${app.rudikYagoConfig}") String yagoConfig) throws Exception {
+	public List<HashMap<String, Rule>> getScore(@RequestBody Rule rule) throws Exception {
 		System.out.println(rule);
 		List<HashMap<String, Rule>> final_rule = new ArrayList<HashMap<String, Rule>>();
 		
@@ -252,10 +255,7 @@ public class RuleRestController {
 		} 
  		 		
 	  	// Check score.
-		String config = dbpediaConfig;
-		if (rule.getKnowledge_base().equals("yago3")) {
-			config = yagoConfig;
-		}
+		String config = Utils.get_config_from_kb(rule.getKnowledge_base(), yagoConfig, dbpediaConfig, wikidataConfig);
 		ConfigurationFacility.setConfigurationFile(config);
 		kbAnalysis = new SparqlKBPredicateSelector();
 	  	Pair<String, String> subjectObjectType = kbAnalysis.getPredicateTypes(rule.getPredicate());
@@ -421,14 +421,9 @@ public class RuleRestController {
 	}
 	
 	@RequestMapping("/{id}/sparqlquery")
-	public Map<String, String> getSparqlQuery(@PathVariable(value="id") String id, 
-			@Value("${app.rudikDbpediaConfig}") String dbpediaConfig, 
-			@Value("${app.rudikYagoConfig}") String yagoConfig) {
+	public Map<String, String> getSparqlQuery(@PathVariable(value="id") String id) {
 		Rule rule = ruleDAL.getRuleById(id);
-		String config = dbpediaConfig;
-		if (rule.getKnowledge_base().equals("yago3")) {
-			config = yagoConfig;
-		}
+		String config = Utils.get_config_from_kb(rule.getKnowledge_base(), yagoConfig, dbpediaConfig, wikidataConfig);
 		ConfigurationFacility.setConfigurationFile(config);
 		kbAnalysis = new SparqlKBPredicateSelector();
 	  	Pair<String, String> subjectObjectType = kbAnalysis.getPredicateTypes(rule.getPredicate());
@@ -456,4 +451,66 @@ public class RuleRestController {
 		
 		return "done for " + i + " rules";
     }
+	
+	@Secured({"ROLE_ADMIN"})
+	@RequestMapping({"/update_support"})
+    public String updateSupport(
+			@Value("${app.rudikPredicate}") String predicate) {
+		List<HashMap<String, Object>> criteria = new ArrayList<HashMap<String, Object>>();
+		criteria.add(new HashMap<String, Object>()
+		{{
+		     put("field", "predicate");
+		     put("op", "=");
+		     put("value", predicate);
+		}});
+		List<Rule> rules = ruleDAL.getRulesByCriteria(criteria);
+		
+		String config = dbpediaConfig;
+		if (predicate.contains("yago")) {
+			config = yagoConfig;
+		}
+		ConfigurationFacility.setConfigurationFile(config);
+		kbAnalysis = new SparqlKBPredicateSelector();
+	  	Pair<String, String> subjectObjectType = kbAnalysis.getPredicateTypes(predicate);
+	  	String typeSubject = subjectObjectType.getLeft();
+	    String typeObject = subjectObjectType.getRight();
+	  	Set<String> set_relations = Sets.newHashSet(predicate);
+	  	
+	  	naive = new DynamicPruningRuleDiscovery();
+	  	
+	  	int i = 0;
+	  	for(Rule rule : rules) {
+
+		  	Set<RuleAtom> rule_atom = HornRule.readHornRule(rule.getPremise());
+		    Double score = naive.getRuleConfidence(rule_atom, set_relations, typeSubject, typeObject, rule.getRule_type());
+		    
+		    rule.setComputed_confidence(score);
+		    ruleDAL.updateRule(rule);
+		    i++;
+	  	}
+		
+		return "done for " + i + " rules";
+    }
+	
+	@Secured({"ROLE_ADMIN"})
+	@RequestMapping({"/{id}/update_support"})
+	public String updateRuleSupport(@PathVariable(value="id") String id) {
+		Rule rule = ruleDAL.getRuleById(id);
+		String config = Utils.get_config_from_kb(rule.getKnowledge_base(), yagoConfig, dbpediaConfig, wikidataConfig);
+		ConfigurationFacility.setConfigurationFile(config);
+		kbAnalysis = new SparqlKBPredicateSelector();
+	  	Pair<String, String> subjectObjectType = kbAnalysis.getPredicateTypes(rule.getPredicate());
+	  	String typeSubject = subjectObjectType.getLeft();
+	    String typeObject = subjectObjectType.getRight();
+	  	Set<String> set_relations = Sets.newHashSet(rule.getPredicate());
+	    Set<RuleAtom> rule_atom = HornRule.readHornRule(rule.getPremise());
+	  	naive = new DynamicPruningRuleDiscovery();
+	  	
+	  	Double score = naive.getRuleConfidence(rule_atom, set_relations, typeSubject, typeObject, rule.getRule_type());
+	    
+	    rule.setComputed_confidence(score);
+	    ruleDAL.updateRule(rule);
+	    
+	    return score.toString();
+	}
 }

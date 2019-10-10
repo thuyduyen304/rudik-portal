@@ -294,7 +294,7 @@ function search_rules_submit() {
                                 } else {
                                 	data = '<a class="rule-op btn btn-sm" role="button">Approve</a>';
                                 }
-                            	data += '<a class="btn btn-sm btn-info btn-eval" role="button" href="/rule_sample/' + row.ruleId + '">Evaluate</a>';
+                            	data += '<a class="btn btn-sm btn-info btn-eval" role="button" target="_blank" href="/rule_sample/' + row.ruleId + '">Evaluate</a>';
                             }
                             return data;
                         }

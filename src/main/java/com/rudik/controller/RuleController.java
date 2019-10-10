@@ -47,6 +47,7 @@ import com.rudik.model.Atom;
 import com.rudik.model.Instance;
 import com.rudik.model.Rule;
 import com.rudik.utils.Parser;
+import com.rudik.utils.Utils;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.ObjectWriter;
 import com.google.gson.Gson;
@@ -64,11 +65,7 @@ public class RuleController {
     
     @GetMapping(value = {"/", "/rule/search"})
     public String showSearchForm(Model model) {
-    	Map<String, String> knowledgeBases = new HashMap<String, String>() {{
-        	put("dbpedia", "DBpedia");
-            put("yago3", "Yago3");
-//            put("wikidata", "Wikidata");
-        }};
+    	Map<String, String> knowledgeBases = Utils.get_kbs();
         
     	model.addAttribute("searchForm", new SearchForm());
         model.addAttribute("knowledgeBases", knowledgeBases);
@@ -96,7 +93,7 @@ public class RuleController {
         
     	model.addAttribute("rules", rules);
     	
-        model.addAttribute("knowledgeBases", ruleDAL.getAllKnowledgeBase());
+        model.addAttribute("knowledgeBases", Utils.get_kbs());
         
         Map<Integer, String> ruleTypes = new HashMap<Integer, String>() {{
         	put(-1, "--None--");
@@ -112,11 +109,7 @@ public class RuleController {
     public String showAddForm(Model model) {
     	model.addAttribute("addForm", new Rule());
     	
-    	Map<String, String> knowledgeBases = new HashMap<String, String>() {{
-              put("dbpedia", "DbPedia");
-              put("yago3", "Yago3");
-          }};
-    	model.addAttribute("knowledgeBases", knowledgeBases);
+    	model.addAttribute("knowledgeBases", Utils.get_kbs());
     	
     	Map<Integer, String> ruleTypes = new HashMap<Integer, String>() {{
       	put(-1, "--None--");
@@ -131,13 +124,8 @@ public class RuleController {
     @Secured({"ROLE_ADMIN"})
     @GetMapping(value = "/rule/approve")
     public String approveForm(Model model) {
-    	Map<String, String> knowledgeBases = new HashMap<String, String>() {{
-        	put("dbpedia", "DBpedia");
-            put("yago3", "Yago3");
-//            put("wikidata", "Wikidata");
-        }};
     	model.addAttribute("searchForm", new SearchForm());
-    	model.addAttribute("knowledgeBases", knowledgeBases);
+    	model.addAttribute("knowledgeBases", Utils.get_kbs());
 
       Map<Integer, String> ruleTypes = new HashMap<Integer, String>() {{
       	put(-1, "--None--");
@@ -172,7 +160,7 @@ public class RuleController {
         
     	model.addAttribute("rules", rules);
     	
-        model.addAttribute("knowledgeBases", ruleDAL.getAllKnowledgeBase());
+        model.addAttribute("knowledgeBases", Utils.get_kbs());
         
         Map<Integer, String> ruleTypes = new HashMap<Integer, String>() {{
         	put(-1, "--None--");

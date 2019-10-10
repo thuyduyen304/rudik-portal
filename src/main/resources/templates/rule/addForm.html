@@ -64,17 +64,24 @@
 						</div>
 						<div>
 							<label for="sparql_endpoint">Sparql endpoint </label>
-							<input type="text" th:field="*{sparql_endpoint}" value="http//localhost:8890/sparql"></input>
+							<input size="57" type="text" th:field="*{sparql_endpoint}" value="http//localhost:8890/sparql"></input>
 						</div>
 						<div>
 							<label for="graph_iri">Graph IRI </label>
-							<input type="text" th:field="*{graph_iri}" placeholder="http://dbpedia.org"></input>
+							<input size="64" type="text" th:field="*{graph_iri}" placeholder="http://dbpedia.org"></input>
 						</div>
-						<div>
+						<!-- <div>
 							<label for="predicate">Predicate</label> <select
 								th:field="*{predicate}">
 								<option th:value="none" th:text="--None--"></option>
 							</select>
+						</div> -->
+						<div>
+							
+							<div class="ui-widget">
+								<label for="predicate">Predicate</label>
+								<input th:field="*{predicate}" type="text" size="64" placeholder="Type to autocomplete or input new predicate">
+							</div>
 						</div>
 					</div>
 					<div class="col-md-4">

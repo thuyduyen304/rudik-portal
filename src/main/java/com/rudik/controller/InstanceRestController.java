@@ -41,20 +41,22 @@ public class InstanceRestController {
 	private final InstanceDAL instanceDAL;
 	private final RuleDAL ruleDAL;
 	
-	private String dbpediaConfig;
-	
+	@Value("${app.rudikYagoConfig}")
 	private String yagoConfig;
 	
-	private Integer maxInstances = 5000;
+	@Value("${app.rudikDbpediaConfig}")
+	private String dbpediaConfig;
+	
+	@Value("${app.rudikWikidataConfig}")
+	private String wikidataConfig;
+	
+	@Value("${app.rudikMaxInst}")
+	private Integer maxInstances;
 
-	public InstanceRestController(@Value("${app.rudikDbpediaConfig}") String dbpediaConfig, 
-			@Value("${app.rudikYagoConfig}") String yagoConfig, @Value("${app.rudikMaxInst}") int maxInst, 
+	public InstanceRestController(
 			InstanceDAL InstanceDAL, RuleDAL RuleDAL) {
 		this.instanceDAL = InstanceDAL;
 		this.ruleDAL = RuleDAL;
-		this.maxInstances = maxInst;
-		this.dbpediaConfig = dbpediaConfig;
-		this.yagoConfig = yagoConfig;
 	}
 	
 	@RequestMapping("/rule-samples/{id}")
@@ -62,12 +64,8 @@ public class InstanceRestController {
 		Rule rule = ruleDAL.getRuleById(rule_id);
 		List<Instance> instances = instanceDAL.getInstanceByRuleId(rule_id, "sample_instances");
 		if(instances.size() == 0) {
-			String rudikConfig = "";
-			// get from dbpedia or yago
-			if (rule.getKnowledge_base().equals("dbpedia"))
-				rudikConfig = dbpediaConfig;
-			else if (rule.getKnowledge_base().equals("yago3"))
-				rudikConfig = yagoConfig;
+			String rudikConfig = Utils.get_config_from_kb(rule.getKnowledge_base(), yagoConfig, dbpediaConfig, wikidataConfig);
+			
 			Map<String, List<RuleAtom>> rulesAtomsDict = new HashMap<>();
 	        Map<String, String> rules_entities_dict = new HashMap<>();
 	        List<String> returnResult = new ArrayList<>();

@@ -1,6 +1,6 @@
 $(document).ready(
     function() {
-        $('#add-form #knowledge_base')
+        $('#add-form #knowledge_base2')
             .change(
             		function() {
                         knowledge_base = $("#knowledge_base").val();
@@ -34,13 +34,34 @@ $(document).ready(
                             });
                     });
         
-        $("#search-form").submit(function(event) {
+        //attach autocomplete
+        $("#predicate").autocomplete({
+            minLength: 0,
+            delay: 500,
+            //define callback to format results
+            source: function (request, response) {
+            	knowledge_base = $("#knowledge_base").val();
+                $.getJSON("/api/rules/" + knowledge_base + "/predicates", request, function(result) {
+                    response($.map(result, function(item) {
+                        return {
+                            label: item,
+                            value: item,
+                        }
+                    }));
+                });
+            },
 
-            // stop submit the form, we will post it manually.
-            event.preventDefault();
-
-            search_rules_submit();
-
+            //define select handler
+            select : function(event, ui) {
+            	console.log(ui);
+                if (ui.item) {
+                    event.preventDefault();
+//                    var defValue = $("#predicate2").prop('defaultValue');
+                    $("#predicate").val(ui.item.value);
+                    $("#predicate").blur();
+                    return false;
+                }
+            }
         });
         
         // Add premise.
@@ -79,6 +100,7 @@ $(document).ready(
             var add = validation();
             if (typeof add === 'object'){
             	$('#form-error').html('');
+            	$(".resultMessages").text("Calculating support...");
             	$.ajax({
         	        type: "POST",
         	        contentType: "application/json",

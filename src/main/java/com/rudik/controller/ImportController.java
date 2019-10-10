@@ -61,7 +61,7 @@ public class ImportController {
     	Map<String, String> knowledgeBases = new HashMap<String, String>() {{
         	put("dbpedia", "DBpedia");
 //            put("yago3", "Yago3");
-            put("all", "All (json format only)");
+            put("all", "All (json format only, no support calculation)");
         }};
         
         Map<String, String> sources = new HashMap<String, String>() {{
