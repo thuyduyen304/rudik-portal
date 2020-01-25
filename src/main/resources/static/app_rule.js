@@ -450,7 +450,8 @@ function search_rules_submit() {
 function trim_prefix(str) {
     p1 = "http://dbpedia.org/ontology/";
     p2 = "http://yago-knowledge.org/resource/";
-    return str.replace(new RegExp(p1 + '|' + p2, 'g'), "");
+    p3 = "http://www.wikidata.org/prop/direct/";
+    return str.replace(new RegExp(p1 + '|' + p2 + '|' + p3, 'g'), "");
 }
 
 function add_input_elm(idx, id, value) {

@@ -203,7 +203,7 @@ function add_input_elm(idx, id, value) {
 function trim_prefix(str) {
     p1 = "http://dbpedia.org/ontology/";
     p2 = "http://dbpedia.org/resource/";
-//    p3 = "http://yago-knowledge.org/ontology/";
+//    p3 = "http://www.wikidata.org/prop/direct/";
     p4 = "http://yago-knowledge.org/resource/";
     return str.replace(new RegExp(p1 + '|' + p2 + '|' + p4, 'g'), "");
 }
