@@ -1,12 +1,18 @@
 package com.rudik.model;
 
+import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Date;
 import java.util.List;
 import java.util.Set;
 
+import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.annotation.Id;
+import org.springframework.data.annotation.LastModifiedDate;
 import org.springframework.data.mongodb.core.mapping.Document;
 import org.springframework.data.mongodb.core.mapping.Field;
+import org.springframework.format.annotation.DateTimeFormat;
 
 import com.rudik.model.Atom;
 import com.rudik.model.Configuration;
@@ -58,17 +64,21 @@ public class Rule {
 	private Short quality_evaluation;
 	
 	@Field("source")
-	private String source;
+	private List<String> source;
 	
 	@Field("status")
 	private Boolean status;
 	
+	@Field("last_updated")
+    private Date last_updated;
+	
 	public Rule() {
-		
+		this.source = new ArrayList<String>();
 	}
 	
 	public Rule(String source) {
-		this.source = source;
+		this.source = new ArrayList<String>();// Arrays.asList(new String[]{source}); 
+		this.source.add(source);
 	}
 	
 	public void setStatus(Boolean status) {
@@ -79,11 +89,15 @@ public class Rule {
 		return this.status;
 	}
 	
-	public void setSource(String source) {
+	public void setSource(List<String> source) {
 		this.source = source;
 	}
 	
-	public String getSource() {
+	public void addSource(String source) {
+		this.source.add(source);
+	}
+	
+	public List<String> getSource() {
 		return this.source;
 	}
 	
@@ -131,7 +145,7 @@ public class Rule {
 		this.conclusion_triple = conclusion;
 	}
 	
-	public Atom getConclusionTriple() {
+	public Atom getConclusion_triple() {
 		return conclusion_triple;
 	}
 	
@@ -206,6 +220,14 @@ public class Rule {
 	public Short getQuality_evaluation() {
 		return quality_evaluation;
 	}
+	
+	public void setLast_updated(Date dt) {
+		this.last_updated = dt;
+	}
+	
+	public Date getLast_updated() {
+		return this.last_updated;
+	}
 
     @Override
     public String toString() 
@@ -222,11 +244,24 @@ public class Rule {
     public int hashCode() {
     	final int prime = 31;
 		int result = 1;
-//		result = prime * result + ((knowledgeBase == null) ? 0 : knowledgeBase.hashCode());
 		result = prime * result + ((rule_type == null) ? 0 : rule_type.hashCode());
-		result = prime * result + ((predicate == null) ? 0 : predicate.hashCode());
+		result = prime * result + ((predicate == null) ? 0 : predicate.toLowerCase().hashCode());
 		result = prime * result + ((premise_triples == null || premise_triples.size() == 0) ? 0 : premise_triples.hashCode());
+		result = prime * result + ((conclusion == null) ? 0 : conclusion.toLowerCase().hashCode());
 
 		return result;
     }
+    
+    public Boolean valid() {
+    	if (this.predicate == null || this.predicate.isEmpty() ||
+    			this.knowledge_base == null || this.knowledge_base.isEmpty() ||
+    			this.premise == null || this.premise.isEmpty() ||
+    			this.rule_type == null ||
+    			this.conclusion == null || this.conclusion.isEmpty()) {
+    		return false;
+    	}
+    	return true;
+    }
+    
+   
 }

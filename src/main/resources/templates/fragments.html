@@ -1,0 +1,71 @@
+<!-- Footer -->
+<footer class="page-footer font-small blue" th:fragment="footer">
+	<div class="footer-copyright text-center py-3">
+		2019
+	</div>
+</footer>
+
+<!-- Footer -->
+<nav class="navbar navbar-default" th:fragment="navbar">
+	<div class="container-fluid">
+		<div class="navbar-header">
+			<a class="navbar-brand" href="/">RuleHub</a>
+		</div>
+		<ul class="nav navbar-nav">
+			<li th:class="${page} == 'rules' ? 'active'" ><a href="/">Show rules</a></li>
+			<li th:class="${page} == 'add-rules' ? 'active'"><a href="/rules/add">Add rules</a></li>
+			<li th:class="${page} == 'admin' ? 'active dropdown' : 'dropdown'">
+			<a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+	          Rule Administration
+	        </a>
+				<div class="dropdown-menu">
+					<a href="/rules/import">Import rules</a>
+					<a href="/rules/export-all">Export rules</a>
+					<div class="divider"></div>
+					<a href="/rules/manage">Rule Management</a>
+				</div>
+			</li>
+			<li th:class="${page} == 'info' ? 'active'"><a href="/user-manual">User Manual</a></li>
+			<li><a href="/login">Login</a></li>
+		</ul>
+	</div>
+</nav>
+	
+	
+<div id="appMsg" th:fragment="app-msg">
+	<div class="alert alert-info" th:if="${msg != null}" th:text="${msg}">
+	</div>
+</div>
+
+
+<div th:fragment="js-load">
+	<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
+	<script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.0/js/bootstrap.min.js"></script>
+	<script src="https://cdn.datatables.net/1.10.19/js/jquery.dataTables.min.js"></script>
+	<script src="https://cdn.datatables.net/select/1.3.0/js/dataTables.select.min.js"></script>
+	<script src="https://cdn.datatables.net/buttons/1.5.6/js/dataTables.buttons.min.js"></script>
+	<script src="https://cdn.datatables.net/buttons/1.5.6/js/buttons.html5.min.js"></script>
+	<script src="https://code.jquery.com/ui/1.12.1/jquery-ui.js"></script>
+	<script>
+	function trim_prefix(str) {
+		if (str) {
+			p1 = "http://dbpedia.org/ontology/";
+		    p2 = "http://dbpedia.org/resource/";
+		    p3 = "http://www.wikidata.org/prop/direct/";
+		    p4 = "http://www.wikidata.org/entity/";
+		    p5 = "http://yago-knowledge.org/resource/";
+		    return str.replace(new RegExp(p1 + '|' + p2 + '|' + p3 + '|' + p4 + '|' + p5, 'g'), "");
+		}
+		return str;
+	}
+	</script>
+</div>
+
+
+<div th:fragment="css-load">
+	<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.0/css/bootstrap.min.css" />
+	<link rel="stylesheet" href="https://cdn.datatables.net/1.10.19/css/jquery.dataTables.min.css" />
+	<link rel="stylesheet" href="https://cdn.datatables.net/select/1.3.0/css/select.dataTables.min.css" />
+	<link rel="stylesheet" href="//code.jquery.com/ui/1.12.1/themes/base/jquery-ui.css" />
+	<link rel="stylesheet" th:href="@{/css/style.css}" />
+</div>

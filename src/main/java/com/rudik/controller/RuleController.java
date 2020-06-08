@@ -3,15 +3,11 @@ package com.rudik.controller;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.ui.ModelMap;
-import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.PutMapping;
-import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
+import org.springframework.web.bind.annotation.RequestParam;
 
 import java.io.BufferedReader;
 import java.io.File;
@@ -19,6 +15,8 @@ import java.io.FileInputStream;
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.io.PrintWriter;
+import java.security.Principal;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.Date;
@@ -29,9 +27,7 @@ import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import javax.validation.Valid;
-
-import org.springframework.beans.factory.annotation.Autowired;
+import javax.servlet.http.HttpServletResponse;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.io.InputStreamResource;
 import org.springframework.core.io.Resource;
@@ -39,14 +35,17 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.annotation.Secured;
+import org.springframework.security.core.GrantedAuthority;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.core.userdetails.User;
 
-import com.rudik.dal.*;
-import com.rudik.form.AddForm;
-import com.rudik.form.SearchForm;
+import com.rudik.dal.RuleDAL;
+import com.rudik.dal.InstanceDAL;
 import com.rudik.model.Atom;
 import com.rudik.model.Instance;
 import com.rudik.model.Rule;
 import com.rudik.utils.Parser;
+import com.rudik.utils.RuleMiningSystem;
 import com.rudik.utils.Utils;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.ObjectWriter;
@@ -56,133 +55,74 @@ import com.google.gson.JsonIOException;
 
 @Controller
 public class RuleController {
-	@Autowired
 	private RuleDAL ruleDAL;
 	private InstanceDAL instanceDAL;
+	private RuleMiningSystem miningSystem;
 	
-	@Autowired
-    RuleRepository ruleRepository;
+	public RuleController(InstanceDAL instanceDAL,
+			RuleDAL ruleDAL, RuleMiningSystem miningSystem) {
+		this.instanceDAL = instanceDAL;
+		this.ruleDAL = ruleDAL;
+		this.miningSystem = miningSystem;
+	}
     
-    @GetMapping(value = {"/", "/rule/search"})
+    @GetMapping(value = {"/", "/rules"})
     public String showSearchForm(Model model) {
-    	Map<String, String> knowledgeBases = Utils.get_kbs();
-        
-    	model.addAttribute("searchForm", new SearchForm());
-        model.addAttribute("knowledgeBases", knowledgeBases);
+    	Map<String, String> knowledge_bases = Utils.getKbs();
+        model.addAttribute("knowledge_bases", knowledge_bases);
 
-        Map<Integer, String> ruleTypes = new HashMap<Integer, String>() {{
-        	put(-1, "--None--");
-            put(0, "Negative");
-            put(1, "Positive");
-        }};
-        model.addAttribute("ruleTypes", ruleTypes);
-        return "rule/searchForm";
+        Map<Integer, String> rule_types = Utils.getRuleTypes();
+        model.addAttribute("rule_types", rule_types);
+        
+        model.addAttribute("page", "rules");
+        
+        return "rule/listRules";
     }
     
-    @PostMapping(value = "/rule/search")
-    public String submitSearchForm(@Valid @ModelAttribute("searchForm")SearchForm searchForm, 
-    	      BindingResult result, ModelMap model) {
-    	ObjectWriter  obj = new ObjectMapper().writer().withDefaultPrettyPrinter();
-    	Map<String, Object> criteria = new HashMap<String, Object>();
-    	
-    	if(searchForm.getRuleType() != -1) {
-    		criteria.put("ruleType", (searchForm.getRuleType() == 1));
-    	}
-    	
-        Map<String, String> rules = new HashMap<String, String>();
-        
-    	model.addAttribute("rules", rules);
-    	
-        model.addAttribute("knowledgeBases", Utils.get_kbs());
-        
-        Map<Integer, String> ruleTypes = new HashMap<Integer, String>() {{
-        	put(-1, "--None--");
-            put(0, "Negative");
-            put(1, "Positive");
-        }};
-        model.addAttribute("ruleTypes", ruleTypes);
-
-        return "rule/searchForm";
-    }
     
-    @GetMapping(value = "/rule/add")
+    @GetMapping(value = "/rules/add")
     public String showAddForm(Model model) {
-    	model.addAttribute("addForm", new Rule());
+    	model.addAttribute("knowledge_bases", Utils.getKbs());
     	
-    	model.addAttribute("knowledgeBases", Utils.get_kbs());
+    	Map<Integer, String> rule_types = Utils.getRuleTypes();
     	
-    	Map<Integer, String> ruleTypes = new HashMap<Integer, String>() {{
-      	put(-1, "--None--");
-          put(0, "Negative");
-          put(1, "Positive");
-      }};
-      model.addAttribute("ruleTypes", ruleTypes);
+    	model.addAttribute("rule_types", rule_types);
+    	model.addAttribute("page", "add-rules");
       
-    	return "rule/addForm";
+    	return "rule/addRules";
     }
     
     @Secured({"ROLE_ADMIN"})
-    @GetMapping(value = "/rule/approve")
+    @GetMapping(value = "/rules/manage")
     public String approveForm(Model model) {
-    	model.addAttribute("searchForm", new SearchForm());
-    	model.addAttribute("knowledgeBases", Utils.get_kbs());
+    	
+		model.addAttribute("knowledgeBases", Utils.getKbs());
 
-      Map<Integer, String> ruleTypes = new HashMap<Integer, String>() {{
-      	put(-1, "--None--");
-          put(0, "Negative");
-          put(1, "Positive");
-      }};
-      model.addAttribute("ruleTypes", ruleTypes);
-      
-      Map<Integer, String> ruleStatus = new HashMap<Integer, String>() {{
-      	put(-1, "--None--");
-          put(0, "Not Approved");
-          put(1, "Approved");
-      }};
-    
-      model.addAttribute("ruleStatus", ruleStatus);
-      
-    	return "rule/approveRules";
+		Map<Integer, String> ruleTypes = new HashMap<Integer, String>() {{
+			put(-1, "--None--");
+			put(0, "Negative");
+			put(1, "Positive");
+		}};
+		model.addAttribute("ruleTypes", ruleTypes);
+	  
+		Map<Integer, String> ruleStatus = new HashMap<Integer, String>() {{
+			put(-1, "--None--");
+			put(0, "Not Approved");
+			put(1, "Approved");
+		}};
+	
+		model.addAttribute("ruleStatus", ruleStatus);
+		model.addAttribute("page", "admin");
+	  
+		return "rule/manageRules";
     }
     
-    @Secured({"ROLE_ADMIN"})
-    @PostMapping(value = "/rule/approve")
-    public String submitApprove(@Valid @ModelAttribute("searchForm")SearchForm searchForm, 
-    	      BindingResult result, ModelMap model) {
-    	ObjectWriter  obj = new ObjectMapper().writer().withDefaultPrettyPrinter();
-    	Map<String, Object> criteria = new HashMap<String, Object>();
-    	
-    	if(searchForm.getRuleType() != -1) {
-    		criteria.put("ruleType", (searchForm.getRuleType() == 1));
-    	}
-    	
-        Map<String, String> rules = new HashMap<String, String>();
-        
-    	model.addAttribute("rules", rules);
-    	
-        model.addAttribute("knowledgeBases", Utils.get_kbs());
-        
-        Map<Integer, String> ruleTypes = new HashMap<Integer, String>() {{
-        	put(-1, "--None--");
-            put(0, "Negative");
-            put(1, "Positive");
-        }};
-        model.addAttribute("ruleTypes", ruleTypes);
-
-        Map<Integer, String> ruleStatus = new HashMap<Integer, String>() {{
-        	put(-1, "--None--");
-            put(0, "Not Approved");
-            put(1, "Approved");
-        }};
-      
-        model.addAttribute("ruleStatus", ruleStatus);
-        return "rule/approveRules";
-    }
     
     @Secured({"ROLE_ADMIN"})
-    @RequestMapping(path = "/rule/export_all", method = RequestMethod.GET)
+    @RequestMapping(value = "/rules/export-all", method = RequestMethod.GET)
     public  ResponseEntity<Resource> exportAllRules(@Value("${app.exportPath}") String directory) throws JsonIOException, IOException {
     	GsonBuilder builder = new GsonBuilder();
+    	builder.serializeSpecialFloatingPointValues();
     	builder.setPrettyPrinting();
     	builder.disableHtmlEscaping();
         Gson gson = builder.create();
@@ -206,6 +146,62 @@ public class RuleController {
                 .contentLength(file.length()) //
                 .body(resource);
         
+    }
+    
+    @GetMapping(value = "/rules/{id}/export-sample-instances")
+	public void export(@RequestParam(name = "rule_id", required = false, defaultValue = "a") String rule_id,
+			HttpServletResponse response) throws IOException {
+		Rule rule = ruleDAL.getRuleById(rule_id);
+		List<Instance> instances = instanceDAL.getInstanceByRuleId(rule_id);
+		
+		if(instances.size() == 0) {
+			instances = miningSystem.getInstances(rule);
+			for (Instance inst: instances) {
+				instanceDAL.addNewInstance(inst);
+			}
+		}
+		
+		ObjectWriter mapper = new ObjectMapper().writer().withDefaultPrettyPrinter();
+		String myString = mapper.writeValueAsString(instances);
+
+		response.setContentType("text/html; charset=UTF-8");
+		response.setCharacterEncoding("UTF-8");
+		response.setHeader("Content-Disposition", "attachment;filename=instances_" + rule_id + ".json");
+
+		PrintWriter out = response.getWriter(); 
+		out.println(myString);
+		out.flush();
+		out.close();
+	}
+    
+    
+    @RequestMapping(value = "/rules/{id}/sample-instances")
+    public String sample_instances(Model model, @PathVariable(value="id") String rule_id) {
+    	boolean isAdmin = false;
+    	
+    	try {
+    		User user = (User)SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+    		for (GrantedAuthority au : user.getAuthorities()) {
+            	if (au.getAuthority().equals("ROLE_ADMIN")) {
+            		isAdmin=true;
+            		break;
+            	}
+            }
+    	} catch(Exception e) {
+    		isAdmin=false;
+    	}
+        
+    	Rule rule = ruleDAL.getRuleById(rule_id);
+    	model.addAttribute("rule", rule);
+    	model.addAttribute("page", "admin");
+    	model.addAttribute("isAdmin", isAdmin);
+    	return "rule/sampleInstances";
+    } 
+    
+    @GetMapping(value = "/user-manual")
+    public String info(Model model) {
+    	model.addAttribute("page", "info");
+    	return "rule/info";
     }
     
     @Secured({"ROLE_ADMIN"})
@@ -269,13 +265,13 @@ public class RuleController {
 		                    		rule.setConclusion_triple(conclusion);
 		                    		rule.setConclusion(conclusion.toString());
 
-		        					List<Rule> check_exist = ruleRepository.findByHashcode(rule.hashCode());
-		        					if (check_exist.size() > 0) {
+		        					Rule check_exist = ruleDAL.getRuleByHashcode(rule.hashCode());
+		        					if (check_exist != null) {
 		        						//rule exist
 		        						count_existing++;
 		        					} else {	        
 		        						rule.setHashcode(rule.hashCode());
-		        						ruleRepository.save(rule);
+		        						ruleDAL.saveRule(rule);
 		        						count_success++;
 		        					}
 			    				}
@@ -302,13 +298,13 @@ public class RuleController {
 	                    		rule.setConclusion_triple(conclusion);
 	                    		rule.setConclusion(conclusion.toString());
 
-	        					List<Rule> check_exist = ruleRepository.findByHashcode(rule.hashCode());
-	        					if (check_exist.size() > 0) {
+	        					Rule check_exist = ruleDAL.getRuleByHashcode(rule.hashCode());
+	        					if (check_exist != null) {
 	        						//rule exist
 	        						count_existing++;
 	        					} else {	        
 	        						rule.setHashcode(rule.hashCode());
-	        						ruleRepository.save(rule);
+	        						ruleDAL.saveRule(rule);
 	        						count_success++;
 	        					}
 		    	    		} else {
@@ -403,13 +399,13 @@ public class RuleController {
 			                    		rule.setConclusion_triple(conclusion);
 			                    		rule.setConclusion(conclusion.toString());
 
-			        					List<Rule> check_exist = ruleRepository.findByHashcode(rule.hashCode());
-			        					if (check_exist.size() > 0) {
+			        					Rule check_exist = ruleDAL.getRuleByHashcode(rule.hashCode());
+			        					if (check_exist != null) {
 			        						//rule exist
 			        						count_existing++;
 			        					} else {	        
 			        						rule.setHashcode(rule.hashCode());
-			        						ruleRepository.save(rule);
+			        						ruleDAL.saveRule(rule);
 			        						count_success++;
 			        					}
 				    				}
@@ -436,13 +432,13 @@ public class RuleController {
 		                    		rule.setConclusion_triple(conclusion);
 		                    		rule.setConclusion(conclusion.toString());
 
-		        					List<Rule> check_exist = ruleRepository.findByHashcode(rule.hashCode());
-		        					if (check_exist.size() > 0) {
+		        					Rule check_exist = ruleDAL.getRuleByHashcode(rule.hashCode());
+		        					if (check_exist != null) {
 		        						//rule exist
 		        						count_existing++;
 		        					} else {	        
 		        						rule.setHashcode(rule.hashCode());
-		        						ruleRepository.save(rule);
+		        						ruleDAL.saveRule(rule);
 		        						count_success++;
 		        					}
 			    	    		} else {
@@ -470,13 +466,8 @@ public class RuleController {
         
     }
 
-    @Secured({"ROLE_ADMIN"})
-    @GetMapping(value = "/rule_sample/{id}")
-    public String sample_instances(Model model, @PathVariable(value="id") String rule_id) {
-    	Rule rule = ruleDAL.getRuleById(rule_id);
-    	model.addAttribute("rule", rule);
-    	
-    	return "rule/sampleInstances";
-    } 
+    
+    
+
 
 }

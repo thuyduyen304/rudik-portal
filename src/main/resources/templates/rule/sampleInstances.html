@@ -2,66 +2,44 @@
 <head>
 <title>Sample Instances</title>
 <!-- CSS load -->
-<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.0/css/bootstrap.min.css" />
-<link rel="stylesheet" href="https://cdn.datatables.net/1.10.19/css/jquery.dataTables.min.css" />
-<link rel="stylesheet" href="https://cdn.datatables.net/select/1.3.0/css/select.dataTables.min.css" />
-<link rel="stylesheet" href="//code.jquery.com/ui/1.12.1/themes/base/jquery-ui.css" />
-<link rel="stylesheet" href="../css/style.css" />
+<link th:replace="fragments :: css-load"></link>
 <!-- CSS load -->
+
 
 </head>
 <body>
 	<!-- Navigation bar -->
-	<nav class="navbar navbar-default">
-		<div class="container-fluid">
-			<div class="navbar-header">
-				<a class="navbar-brand" href="#">RuleHub</a>
-			</div>
-			<ul class="nav navbar-nav">
-				<li><a href="/">Show rules</a></li>
-				<li><a href="/rule/add">Add rules</a></li>
-				<li class="dropdown active">
-				<a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-		          Rule Administration
-		        </a>
-					<div class="dropdown-menu">
-						<a href="/rule/import">Import rules</a>
-						<a href="/rule/export_all">Export rules</a>
-						<div class="divider"></div>
-						<a href="/rule/approve">Rule Management</a>
-					</div>
-				</li>
-				<li><a href="/user_manual">User Manual</a></li>
-				<li><a href="/login">Login</a></li>
-			</ul>
-		</div>
-	</nav>
+	<div th:replace="fragments :: navbar"></div>
 	<!-- Navigation bar -->
 
 	<div class="wrapper">
-		<h2>Rule Management</h2>
-		<em class="small">Allow administrators approve as well as edit rules.
+		<h2 th:text="${isAdmin} ? 'Rule Management' : 'Rule Sample'"></h2>
+		<em class="small">(Up to) 20 random instances of the rule.
 		</em>
 		<hr />
-		<!-- Criteria form -->
 		
-		<!-- Criteria form -->
-
 		<!-- Message -->
-		<div id="appMsg"></div>
+		<div th:replace="fragments :: app-msg"></div>
 		<!-- Message -->
+		
 		<div id="rule-info">
 			<strong>Predicate: </strong><p th:text="${rule.predicate}"></p>
+			<strong>Premise: </strong><p th:text="${rule.premise}"></p>
+			<strong>Conclusion: </strong><p th:text="${rule.conclusion}"></p>
 			<div th:switch="${rule.rule_type}"><strong>Rule type: </strong><p th:case="false">Negative</p><p th:case="true">Positive</p></div>
+			<strong>Computed confidence: </strong><p th:text="${rule.computed_confidence}"></p>
 			<strong>Human confidence: </strong><p class="human_confidence" th:text="${rule.human_confidence}"></p>
-			<div id="compute_confidence"></div>
+			<div th:if="${isAdmin}" id="compute_confidence">
+				<button type="button" id="btn-compute-hc" class="btn btn-primary btn-sm">Compute Human Confidence</button>
+			</div>
 		</div>
 		<!-- Results block -->
-		<div id="instance_samples resultsBlock">
+		<div id="rule-instance-samples">
 			<hr />
 			<table id="results-table" class="display" style="width: 100%">
 				<thead>
 					<tr>
+						<th></th>
 						<th>Premise</th>
 						<th>Label</th>
 					</tr>
@@ -74,25 +52,14 @@
 
 
 	<div id="rule-details"></div>
-
-	<!-- Footer -->
-	<footer class="page-footer font-small blue">
-		<div class="footer-copyright text-center py-3">
-			2019
-		</div>
-	</footer>
-	<!-- Footer -->
-
+	
+	<!-- footer -->
+	<div th:replace="fragments :: footer"></div>
 	<!-- JS load -->
-	<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
-	<script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.0/js/bootstrap.min.js"></script>
-	<script src="https://cdn.datatables.net/1.10.19/js/jquery.dataTables.min.js"></script>
-	<script src="https://cdn.datatables.net/select/1.3.0/js/dataTables.select.min.js"></script>
-	<script src="https://cdn.datatables.net/buttons/1.5.6/js/dataTables.buttons.min.js"></script>
-	<script src="https://cdn.datatables.net/buttons/1.5.6/js/buttons.html5.min.js"></script>
-	<script src="https://code.jquery.com/ui/1.12.1/jquery-ui.js"></script>
-	<script type="text/javascript" src="../instances_sample.js"></script>
-	<!-- JS load -->
+	<div th:replace="fragments :: js-load"></div>
+	
+	<!--  custom js -->
+	<script type="text/javascript" th:src="@{/instances_sample.js}"></script>
 	
 </body>
 </html>

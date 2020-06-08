@@ -11,8 +11,10 @@ public interface RuleDAL {
 	List<Rule> getAllRules();
 
 	Rule getRuleById(String ruleId);
+	
+	Rule getRuleByHashcode(Integer ruleId);
 
-	Rule addNewRule(Rule rule);
+//	Rule addNewRule(Rule rule);
 	
 	List<Rule> getRuleByKnowledgeBase(String knowledge_base);
 	
@@ -24,11 +26,11 @@ public interface RuleDAL {
 	
 	List<Rule> getAllValidRules();
 	
-	Rule updateQualityEvaluation(String rule_id, Rule changes);
+//	Rule updateQualityEvaluation(String rule_id, Rule changes);
 	
 	Rule updateStatus(String rule_id, Boolean changes);
 	
-	Rule updateRule(Rule rule);
+	Rule saveRule(Rule rule);
 	
 	List<VotingCount> getVotes(String rule_id);
 	

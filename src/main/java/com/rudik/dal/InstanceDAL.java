@@ -9,9 +9,9 @@ public interface InstanceDAL {
 
 	Instance getInstanceById(String instanceId);
 	
-	List<Instance> getInstanceByRuleId(String rule_id, String collection);
+	List<Instance> getInstanceByRuleId(String rule_id);
 	
-	Instance addNewInstance(Instance inst, String collection);
+	Instance addNewInstance(Instance inst);
 	
 	Instance updateLabel(String instance_id, Instance changes);
 	

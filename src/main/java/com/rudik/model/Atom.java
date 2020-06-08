@@ -48,10 +48,10 @@ public class Atom {
 	public int hashCode() {
 		final int prime = 31;
 		int result = 1;
-		result = prime * result + ((object == null) ? 0 : object.hashCode());
+		result = prime * result + ((object == null) ? 0 : object.toLowerCase().hashCode());
 		result = prime * result
-				+ ((predicate == null) ? 0 : predicate.hashCode());
-		result = prime * result + ((subject == null) ? 0 : subject.hashCode());
+				+ ((predicate == null) ? 0 : predicate.toLowerCase().hashCode());
+		result = prime * result + ((subject == null) ? 0 : subject.toLowerCase().hashCode());
 		return result;
 	}
 }

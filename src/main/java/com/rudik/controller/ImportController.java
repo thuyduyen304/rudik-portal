@@ -4,19 +4,13 @@ package com.rudik.controller;
 import java.io.InputStreamReader;
 
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
 import org.apache.commons.csv.CSVFormat;
 import org.apache.commons.csv.CSVParser;
 import org.apache.commons.csv.CSVRecord;
-import org.apache.commons.lang3.tuple.Pair;
 import org.apache.commons.io.FilenameUtils;
-import org.apache.jena.ext.com.google.common.collect.Sets;
-import org.apache.tomcat.util.json.JSONParser;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.access.annotation.Secured;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
@@ -27,74 +21,61 @@ import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import com.rudik.utils.Parser;
-
-import asu.edu.rule_miner.rudik.configuration.ConfigurationFacility;
-import asu.edu.rule_miner.rudik.model.horn_rule.HornRule;
-import asu.edu.rule_miner.rudik.model.horn_rule.RuleAtom;
-import asu.edu.rule_miner.rudik.predicate.analysis.KBPredicateSelector;
-import asu.edu.rule_miner.rudik.predicate.analysis.SparqlKBPredicateSelector;
-import asu.edu.rule_miner.rudik.rule_generator.DynamicPruningRuleDiscovery;
+import com.rudik.utils.RuleMiningSystem;
 
 import com.google.gson.Gson;
-import com.rudik.dal.RuleRepository;
+import com.rudik.dal.RuleDALImpl;
 import com.rudik.model.Atom;
 import com.rudik.model.Rule;
 
 @Controller
 public class ImportController {
-   
-    @Autowired
-    RuleRepository ruleRepository;
+
+    RuleDALImpl ruleRepository;
+    RuleMiningSystem miningSystem;
     
-    private KBPredicateSelector kbAnalysis;
-    private DynamicPruningRuleDiscovery naive;
-    
-    public ImportController(@Value("${app.rudikDbpediaConfig}") String config) {
-    	ConfigurationFacility.setConfigurationFile(config);
-    	kbAnalysis = new SparqlKBPredicateSelector();
-    	naive = new DynamicPruningRuleDiscovery();
+    public ImportController(RuleDALImpl ruleRepository, RuleMiningSystem miningSystem) {
+    	this.ruleRepository = ruleRepository;
+    	this.miningSystem = miningSystem;
     }
     
-    @GetMapping("/rule/import")
+    @GetMapping("/rules/import")
     @Secured({"ROLE_ADMIN"})
     public String showImportForm(Model model) {
-    	Map<String, String> knowledgeBases = new HashMap<String, String>() {{
-        	put("dbpedia", "DBpedia");
-//            put("yago3", "Yago3");
-            put("all", "All (json format only, no support calculation)");
+    	Map<String, String> methods = new HashMap<String, String>() {{
+        	put("all", "Any rules");
+            put("amie", "AMIE rules on DBpedia");
+            put("rudik", "RUDIK rules on DBpedia");
         }};
         
-        Map<String, String> sources = new HashMap<String, String>() {{
-        	put("rudik", "Rudik");
-            put("amie", "Amie");
-            put("all", "All");
-        }};
-        
-    	
-        model.addAttribute("knowledgeBases", knowledgeBases);
-        model.addAttribute("sources", sources);
+        model.addAttribute("methods", methods);
+        model.addAttribute("page", "admin");
         
         return "rule/import";
     }
     
-    @PostMapping("/rule/import") 
+    @PostMapping("/rules/import") 
     @Secured({"ROLE_ADMIN"})
     public String importRules(@RequestParam("file") MultipartFile file, 
-    		@RequestParam String knowledgeBase, @RequestParam String source, RedirectAttributes redirectAttributes) {
+    		@RequestParam String method, RedirectAttributes redirectAttributes) {
 
         if (file.isEmpty()) {
             redirectAttributes.addFlashAttribute("message", "Please select a file to upload");
             return "redirect:/rule/import";
         }
         String msg = "";
+        int count_total = 0;
         int count_success = 0;
         int count_existing = 0;
+        int count_data_error = 0;
+        String knowledgeBase = "dbpedia";
+        
 
         try {
         	InputStreamReader reader = new InputStreamReader(file.getInputStream());
         	CSVParser csvParser;
         	
-        	switch (source) {
+        	switch (method) {
         		case "amie":
                 	csvParser = CSVFormat.DEFAULT.withHeader().parse(reader);  
                 	
@@ -103,26 +84,27 @@ public class ImportController {
                 			String rule_string = record.get("rule");
                     		try {
             					Rule rule = Parser.amie_to_rudik(knowledgeBase, rule_string);
-            					List<Rule> check_exist = ruleRepository.findByHashcode(rule.hashCode());
-            					if (check_exist.size() > 0) {
+            					count_total++;
+            					Rule check_exist = ruleRepository.getRuleByHashcode(rule.hashCode());
+            					if (check_exist != null) {
             						//rule exist
             						count_existing++;
+            						if (!check_exist.getSource().contains("amie")) {
+            							check_exist.addSource("amie");
+            							ruleRepository.saveRule(check_exist);
+            						}
             					} else {
-            						Double support;
+            						rule.addSource("amie");
+            						Double score;
             						try {
-            							support = Double.parseDouble(record.get("support"));
+            							score = Double.parseDouble(record.get("support"));
             						} catch (Exception e) {
-            							Pair<String, String> subjectObjectType = kbAnalysis.getPredicateTypes(rule.getPredicate());
-                				        String typeSubject = subjectObjectType.getLeft();
-                				        String typeObject = subjectObjectType.getRight();
-                				        Set<String> set_relations = Sets.newHashSet(rule.getPredicate());
-                				        Set<RuleAtom> rule_atom = HornRule.readHornRule(rule.getPremise());
-                				        support = naive.getRuleConfidence(rule_atom, set_relations, typeSubject, typeObject, rule.getRule_type());
+            							score = miningSystem.getScore(rule);
             						}
             						rule.setStatus(true);
-            				        rule.setComputed_confidence(support);
+            				        rule.setComputed_confidence(score);
             				        rule.setHashcode(rule.hashCode());
-            						ruleRepository.save(rule);
+            						ruleRepository.saveRule(rule);
             						count_success++;
             					}
             					
@@ -142,6 +124,7 @@ public class ImportController {
                 		if (record.isSet("relation") &&
                 				record.isSet("type") &&
                 				record.isSet("premise")) {
+                			count_total++;
                 			String predicate = record.get("relation").trim();
                     		Boolean type = record.get("type").equals("1");
                     		String premise = record.get("premise").trim();
@@ -149,23 +132,10 @@ public class ImportController {
                     		Set<Atom> premise_triples = Parser.premise_to_atom_list(premise);
                     		
                     		if(premise_triples.size() > 0) {
-                    			Double support;
-                        		try {
-                        			support = Double.parseDouble(record.get("support"));
-                        		} catch(Exception e) {
-                        			Pair<String, String> subjectObjectType = kbAnalysis.getPredicateTypes(predicate);
-            				        String typeSubject = subjectObjectType.getLeft();
-            				        String typeObject = subjectObjectType.getRight();
-            				        Set<String> set_relations = Sets.newHashSet(predicate);
-            				        Set<RuleAtom> rule_atom = HornRule.readHornRule(premise);
-            				        support = naive.getRuleConfidence(rule_atom, set_relations, typeSubject, typeObject, type);
-                        		}
-                        		Rule rule = new Rule("rudik");
+                        		Rule rule = new Rule();
                     			rule.setPremise(premise);
                     			rule.setPredicate(predicate);
                     			rule.setRule_type(type);
-                    			rule.setStatus(true);
-                    			rule.setComputed_confidence(support);
                     			rule.setKnowledge_base(knowledgeBase);
                     			rule.setPremise_triples(premise_triples);
                     			rule.setStatus(true);
@@ -173,15 +143,29 @@ public class ImportController {
                         		rule.setConclusion_triple(conclusion);
                         		rule.setConclusion(conclusion.toString());
 
-            					List<Rule> check_exist = ruleRepository.findByHashcode(rule.hashCode());
-            					if (check_exist.size() > 0) {
+            					Rule check_exist = ruleRepository.getRuleByHashcode(rule.hashCode());
+            					if (check_exist != null) {
             						//rule exist
             						count_existing++;
-            					} else {	        
+            						if (!check_exist.getSource().contains("rudik")) {
+            							check_exist.addSource("rudik");
+            							ruleRepository.saveRule(check_exist);
+            						}
+            					} else {
+            						rule.addSource("rudik");
+            						Double score;
+                            		try {
+                            			score = Double.parseDouble(record.get("support"));
+                            		} catch(Exception e) {
+                            			score = miningSystem.getScore(rule);
+                            		}
+                        			rule.setComputed_confidence(score);
             						rule.setHashcode(rule.hashCode());
-            						ruleRepository.save(rule);
+            						ruleRepository.saveRule(rule);
             						count_success++;
             					}
+                    		} else {
+                    			count_data_error++;
                     		}
                     		
                 		}
@@ -189,27 +173,53 @@ public class ImportController {
                     }
         			break;
         		case "all":
-        			System.out.println("debug1");
         			String ext = FilenameUtils.getExtension(file.getOriginalFilename());
         			if (ext.equals("json")) {
         				try {
         					Gson gson = new Gson();
         					Rule[] rules = gson.fromJson(reader, Rule[].class);
+        					count_total = rules.length;
         					
         					for(Rule rule: rules) {
-        						System.out.println(rule);
-        						List<Rule> check_exist = ruleRepository.findByHashcode(rule.hashCode());
-            					if (check_exist.size() > 0) {
-            						//rule exist
-            						count_existing++;
-            					} else {	        
-            						rule.setHashcode(rule.hashCode());
-            						rule.setStatus(true);
-            						ruleRepository.save(rule);
-            						count_success++;
-            					}
+        						if (rule.valid() == false) {
+        							count_data_error++;
+        						} else {
+        							Rule check_exist = ruleRepository.getRuleByHashcode(rule.hashCode());
+                					if (check_exist != null) {
+                						//rule exist
+                						count_existing++;
+                						boolean changed = false;
+                						if (rule.getSource() != null) {
+                							for (String source: rule.getSource()) {
+                    							if (!check_exist.getSource().contains(source)) {
+                    								check_exist.addSource(source);
+                    								changed = true;
+                    							}
+                    						}
+                						}
+                						if (changed) {
+                							ruleRepository.saveRule(check_exist);
+                						}
+                					} else {
+            							rule.setRuleId(null);
+            							try {
+            								if (rule.getPremise_triples() == null) {
+                    							rule.setPremise_triples(Parser.premise_to_atom_list(rule.getPremise()));
+                    						}
+                							if (rule.getConclusion_triple() == null) {
+                    							rule.setConclusion_triple(Parser.str_to_atom(rule.getConclusion()));
+                    						}
+                							rule.setHashcode(rule.hashCode());
+                    						rule.setStatus(true);
+                    						ruleRepository.saveRule(rule);
+                    						count_success++;
+            							} catch(Exception e) {
+            								count_data_error++;
+            							}
+                					}
+        						}
+        						
         					}
-        					System.out.println(count_success);
         				} catch (Exception e) {
         					System.out.println(e);
         				}
@@ -217,15 +227,14 @@ public class ImportController {
         			}
         			break;
         	}
-        		
-
-
         } catch (Exception e) {
             e.printStackTrace();
+            msg = "Error. " + e.getMessage();
         }
-        redirectAttributes.addFlashAttribute("msg", msg + "Successfully imported " + count_success + " rules. \n" + 
-                "Ignored " + count_existing + " rules.");
+        msg = msg + "\nFound " + count_total + " rules. " + "Successfully imported " + count_success + " rule(s). \n" + 
+        "Ignored " + count_existing + " existing rule(s) and " + count_data_error + " invalid rule(s)";
+        redirectAttributes.addFlashAttribute("msg", msg);
 
-        return "redirect:/";
+        return "redirect:/rules/manage";
     }
 }

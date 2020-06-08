@@ -1,48 +1,26 @@
 <html xmlns:th="http://www.thymeleaf.org">
 <head>
-<title>Import</title>
+<title>User Manual</title>
 <!-- CSS load -->
-<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.0/css/bootstrap.min.css" />
-<link rel="stylesheet" href="//code.jquery.com/ui/1.12.1/themes/base/jquery-ui.css" />
-<link rel="stylesheet" href="../css/style.css" />
+<link th:replace="fragments :: css-load"></link>
 <!-- CSS load -->
 
 </head>
 <body>
 	<!-- Navigation bar -->
-	<nav class="navbar navbar-default">
-		<div class="container-fluid">
-			<div class="navbar-header">
-				<a class="navbar-brand" href="#">RuleHub</a>
-			</div>
-			<ul class="nav navbar-nav">
-				<li><a href="/">Show rules</a></li>
-				<li><a href="/rule/add">Add rules</a></li>
-				<li class="dropdown">
-				<a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-		          Rule Administration
-		        </a>
-					<div class="dropdown-menu">
-						<a href="/rule/import">Import rules</a>
-						<a href="/rule/export_all">Export rules</a>
-						<div class="divider"></div>
-						<a href="/rule/approve">Rule Management</a>
-					</div>
-				</li>
-				<li class="active" ><a href="/user_manual">User Manual</a></li>
-				<li><a href="/login">Login</a></li>
-			</ul>
-		</div>
-	</nav>
+	<div th:replace="fragments :: navbar"></div>
 	<!-- Navigation bar -->
 
 	<div class="wrapper">
 		<h2>User Manual</h2>
 		<div id="toc" class="tocstyle">
-			<b style="margin-left: 10px">Table of Contents</b>&nbsp;&nbsp;<a id="zwTOCLink">[ Hide]</a>
+			<b style="margin-left: 10px">Table of Contents</b>
 			<div id="zwTOCDiv"><span style="margin-left: 30px; line-height: 20px"><img src="../images/arrow.gif" /> <a href="#1._Show_rules">1. Show rules</a></span><br /><span style="margin-left: 30px; line-height: 20px"><img src="../images/arrow.gif" /> <a href="#2._Add_rules">2. Add rules</a></span><br /><span style="margin-left: 30px; line-height: 20px"><img src="../images/arrow.gif" /> <a href="#3._Rule_Administration">3. Rule Administration</a></span><br /><span style="margin-left: 40px; line-height: 20px"><img src="../images/arrow.gif" /> <a href="#3.1._Export_rules">3.1. Export rules</a></span><br /><span style="margin-left: 40px; line-height: 20px"><img src="../images/arrow.gif" /> <a href="#3.2._Import_rules">3.2. Import rules</a></span><br /><span style="margin-left: 40px; line-height: 20px"><img src="../images/arrow.gif" /> <a href="#3.3._Rule_Management">3.3. Rule Management</a></span><br /></div>
 		</div>
-		<div>There are different algorithms to discover rules over Knowledge Bases, as a consequence there are many rules generated from many experiments over time. With the aim to store and share discovered rules as well as to expose them with metadata, RuleHub allows users to easily search for rules, add new rules, and export them in different formats.</div>
+		<br />
+		<div>Horn rules stating dependencies over Knowledge Graph can be used for identifying errors or adding new facts. For example, the rule <em>child(object,subject) &rightarrow; parent(subject,object)</em> states that if person A is child of person B, then B is parent of A. This type of rules is called positive rules and it aims to enrich the Knowledge Bases with new facts, while the opposite type - negative rules - is used to detect errors. If a set of triples in a graph satisfies a negative rule, then there must be at least one incorrect triple among them. For example, the rule <em style=''>child(subject,object) &amp; birthYear(subject,v0) &amp; birthYear(object,v1) &amp; &gt;(v0,v1) &rightarrow; &bottom;</em> states that parents cannot be younger than their children.
+		</div></br>
+		<div>There are different algorithms to discover horn rules over Knowledge Bases, as a consequence there are many rules generated from many experiments over time. With the aim to store and share discovered rules as well as to expose them with metadata, RuleHub allows users to easily search for rules, add new rules, and export them in different formats.</div>
 		<h2><a name="1._Show_rules" class="toclink"></a>1. Show rules</h2>
 		<div>Displays rules in the system with following information:&nbsp;</div>
 		<div>
@@ -69,7 +47,7 @@
 				<li><span style="font-family: lato, arial, helvetica, sans-serif; font-size: 14px">human_confidence</span></li>
 			</ul>
 			<div>Rules by default display in a table with 5 columns: rule type, rule content, quality evaluation, human confidence and computed confidence. To view all information of a rule, users can click on its content.&nbsp;</div>
-			<div>  <img src="../images/search.JPG" alt="search" border="0" hspace="0" vspace="0" style="width: 1010px" /> </div>
+			<div>  <img src="../images/search.JPG" alt="search" border="0" hspace="0" vspace="0" style="width: 1010px; display: block; margin: auto" /> </div>
 			<br />              
 			<div>Provides addition features on found rules:</div>
 		</div>
@@ -96,7 +74,7 @@
 				<li>Quality Evaluation</li>
 			</ul>
 		</div>
-		<div><img src="../images/add.JPG" alt="add" border="0" hspace="0" vspace="0" style="width: 1010px" /></div>
+		<div><img src="../images/add.JPG" alt="add" border="0" hspace="0" vspace="0" style="width: 1010px; display: block; margin: auto" /></div>
 		<br />    
 		<div>The system firstly checks if this rule exists in the corpus or not. If this is a new rule, it will automatically calculate the support score based on the number of matching cases and not-matching cases over the corresponding Knowledge Base, then store it into the database as invalid rules. Therefore these rules will not be displayed in the Show Rules tab until they are approved by the administrators.</div>
 		<h2><a name="3._Rule_Administration" class="toclink"></a>3. Rule Administration</h2>
@@ -107,12 +85,12 @@
 		<div>Import massive rules to the corpus.&nbsp;<span style="font-size: 14px">Administrators must specify the source (AMIE or RuDik), then they can import rules into the system using following format.</span></div>
 		<div>
 			<ul>
-				<li>AMIE rules:&nbsp;<span style="font-family: lato, arial, helvetica, sans-serif; font-size: 14px">http://rudik.eurecom.fr:8080/download/template?file_name=amie.csv</span></li>
-				<li><span style="font-family: lato, arial, helvetica, sans-serif; font-size: 14px">RuDiK rules:&nbsp;</span>http://rudik.eurecom.fr:8080/download/template?file_name=rudik.csv</li>
+				<li>AMIE rules:&nbsp;<a href="http://rudik.eurecom.fr:8080/download/template?file_name=amie.csv" style="font-family: lato, arial, helvetica, sans-serif; font-size: 14px">http://rudik.eurecom.fr:8080/download/template?file_name=amie.csv</a></li>
+				<li><span style="font-family: lato, arial, helvetica, sans-serif; font-size: 14px">RuDiK rules:&nbsp;</span><a href="http://rudik.eurecom.fr:8080/download/template?file_name=rudik.csv">http://rudik.eurecom.fr:8080/download/template?file_name=rudik.csv</a></li>
 			</ul>
 		</div>
 		<div>Rules without the support score will be calculated automatically, otherwise using the score provided in the file. Existing rules will be ignored.&nbsp;</div>
-		<div><img src="../images/import.JPG" alt="import" border="0" hspace="0" vspace="0" style="width: 1010px" /></div>
+		<div><img src="../images/import.JPG" alt="import" border="0" hspace="0" vspace="0" style="width: 1010px; display: block; margin: auto" /></div>
 		<br />       
 		<h3><a name="3.3._Rule_Management" class="toclink"></a>3.3. Rule Management</h3>
 		<div>Where the administrators can approve and edit scores for rules. Changes here will be up-dated into the database immediately.</div>
@@ -125,7 +103,7 @@
 				<li style="font-size: 14px"><span style="font-family: lato, arial, helvetica, sans-serif; font-size: 14px">Human Confidence</span></li>
 				<li style="font-size: 14px">Rule Status</li>
 			</ul>
-			<div><img src="../images/admin.JPG" alt="admin" border="0" hspace="0" vspace="0" style="width: 1010px" /></div>
+			<div><img src="../images/admin.JPG" alt="admin" border="0" hspace="0" vspace="0" style="width: 1010px; display: block; margin: auto" /></div>
 			<br />        
 			<div>Features provided in the results:</div>
 		</div>
@@ -136,10 +114,15 @@
 				<li style="font-size: 14px">Edit the quality evaluation of a rule. Changes in this page<span style="font-family: lato, arial, helvetica, sans-serif; font-size: 14px">&nbsp;effect immediately</span></li>
 				<li style="font-size: 14px">View and evaluate sample of a rule</li>
 			</ul>
-			<div><img src="../images/evaluate.JPG" alt="evaluate" border="0" hspace="0" vspace="0" style="width: 1010px" /></div>
+			<div><img src="../images/evaluate.JPG" alt="evaluate" border="0" hspace="0" vspace="0" style="width: 1010px; display: block; margin: auto" /></div>
 			<br />    
 		</div>
 	</div>
+	
+	<!-- footer -->
+	<div th:replace="fragments :: footer"></div>
+	<!-- JS load -->
+	<div th:replace="fragments :: js-load"></div>
 </body>
 
 

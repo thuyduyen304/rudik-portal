@@ -2,80 +2,54 @@
 <head>
 <title>Import</title>
 <!-- CSS load -->
-<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.0/css/bootstrap.min.css" />
-<link rel="stylesheet" href="//code.jquery.com/ui/1.12.1/themes/base/jquery-ui.css" />
-<link rel="stylesheet" href="../css/style.css" />
+<link th:replace="fragments :: css-load"></link>
 <!-- CSS load -->
 
 </head>
 <body>
 	<!-- Navigation bar -->
-	<nav class="navbar navbar-default">
-		<div class="container-fluid">
-			<div class="navbar-header">
-				<a class="navbar-brand" href="#">RuleHub</a>
-			</div>
-			<ul class="nav navbar-nav">
-				<li><a href="/">Show rules</a></li>
-				<li><a href="/rule/add">Add rules</a></li>
-				<li class="dropdown active">
-				<a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-		          Rule Administration
-		        </a>
-					<div class="dropdown-menu">
-						<a href="/rule/import">Import rules</a>
-						<a href="/rule/export_all">Export rules</a>
-						<div class="divider"></div>
-						<a href="/rule/approve">Rule Management</a>
-					</div>
-				</li>
-				<li><a href="user_manual">User Manual</a></li>
-				<li><a href="/login">Login</a></li>
-			</ul>
-		</div>
-	</nav>
+	<div th:replace="fragments :: navbar"></div>
 	<!-- Navigation bar -->
 
 	<div class="wrapper">
 		<h2>Import Rules</h2>
 		<em class="small">Import rules into the system.
-		Rules without the support score will be calculated automatically (DbPedia only). 
 		Existing rules will be ignored. </em>
 		<hr />
 		
+		<!-- Message -->
+		<div th:replace="fragments :: app-msg"></div>
+		<!-- Message -->
+		
 		<!-- Import form -->
-		<form th:object="${importForm}" action="/rule/import" method="post"
+		<form th:object="${importForm}" action="/rules/import" method="post"
 			id="import-form" enctype="multipart/form-data">
 
 			<div class="container">
 				<div class="row">
 					<div>
+					
 						<div class="form-group row">
-							<label class="col-sm-2 col-form-label" for="knowledgeBase">Knowledge Base</label> 
+							<label class="col-sm-2 col-form-label" for="method">You want to import...</label> 
 							<div class="col-sm-10">
-								<select name="knowledgeBase">
-										<option th:each="kb: ${knowledgeBases}" th:value="${kb.key}"
-										th:text="${kb.value}"></option>
-								</select>
+								<div th:each="m: ${methods}">
+									<input type="radio" name="method" th:value="${m.key}"
+											th:id="${m.key}" required/>
+									<label th:for="${m.key}" th:text="${m.value}"></label>
+									<em class="small" th:switch="${m.key}">
+									    <span th:case="'amie'">(csv supported, download the sample file <a href="/download/template?file_name=amie.csv">here</a>.)</span>
+									    <span th:case="'rudik'">(csv supported, download the sample file <a href="/download/template?file_name=rudik.csv">here</a>.)</span>
+									    <span th:case="'all'">(json supported, download the sample file <a href="/download/template?file_name=rules.json">here</a>.)</span>
+									</em><br>
+								</div>
+								
 							</div>
 						</div>
 						<div class="form-group row">
-							<label class="col-sm-2 col-form-label" for="source">Source</label> 
-							<div class="col-sm-10">
-								<select name="source">
-										<option th:each="src: ${sources}" th:value="${src.key}"
-										th:text="${src.value}"></option>
-								</select>
-							</div>
-						</div>
-						<div class="form-group row">
-							<label class="col-sm-2 col-form-label" for="file">File</label>
+							<label class="col-sm-2 col-form-label" for="file">Upload your file</label>
 							<div class="col-sm-10">
 								<input type="file" name="file" required="required"/>
-								<div class="small">
-								<div><span>Download sample file for Amie rules <a href="/download/template?file_name=amie.csv">here.</a></span></div>
-								<div><span>Download sample file for Rudik rules <a href="/download/template?file_name=rudik.csv">here</a></span></div>
-								</div>
+						
 							</div>
 						</div>
 						<div class="form-group row">
@@ -89,29 +63,30 @@
 			</div>
 		</form>
 		<!-- Criteria form -->
-
-		<!-- Message -->
-		<div id="appMsg"></div>
-		<!-- Message -->
 		
 	</div>
 
 
 	<div id="rule-details"></div>
 
-	<!-- Footer -->
-	<footer class="page-footer font-small blue">
-		<div class="footer-copyright text-center py-3">
-			2019
-		</div>
-	</footer>
-	<!-- Footer -->
-
+	<!-- footer -->
+	<div th:replace="fragments :: footer"></div>
 	<!-- JS load -->
-	<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
-	<script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.0/js/bootstrap.min.js"></script>
-	<script type="text/javascript" src="../main.js"></script>
-	<!-- JS load -->
+	<div th:replace="fragments :: js-load"></div>
+	
+	<script>
+	$("#import-form").on('submit', function() {
+    	var $this = $("#import-form button[type='submit']");
+        var loadingText = 'Importing...';
+        $this.data('original-text', $(this).html());
+        $this.html(loadingText);
+        $this.attr("disabled", "disabled")
+        
+        if ($(this).html() !== loadingText) {
+          
+        }
+      });
+	</script>
 	
 </body>
 </html>

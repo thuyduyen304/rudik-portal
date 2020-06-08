@@ -1,0 +1,126 @@
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+<title>Approve Rules</title>
+<!-- CSS load -->
+<link th:replace="fragments :: css-load"></link>
+<!-- CSS load -->
+
+</head>
+<body>
+	<!-- Navigation bar -->
+	<div th:replace="fragments :: navbar"></div>
+	<!-- Navigation bar -->
+	
+
+	<div class="wrapper">
+		<h2>Rule Management</h2>
+		<em class="small">Allow administrators approve as well as edit rules.
+		</em>
+		<hr />
+		
+		<!-- Message -->
+		<div th:replace="fragments :: app-msg"></div>
+		<!-- Message -->
+		
+		<!-- Criteria form -->
+		<form method="post"
+			id="search-form">
+
+			<div class="container">
+				<div class="row">
+					<div class="col-md-6">
+						<div>
+							<label for="type">Rule Type</label> <select
+								id="ruleType">
+								<option th:each="rt: ${ruleTypes}" th:value="${rt.key}"
+									th:text="${rt.value}"></option>
+							</select>
+						</div>
+						<div>
+							<label for="knowledgeBase">Knowledge Base</label> <select 
+							id="knowledgeBase">
+								<option th:value="none" th:text="--None--"></option>
+								<option th:each="kb: ${knowledgeBases}" th:value="${kb.key}"
+									th:text="${kb.value}"></option>
+							</select>
+						</div>
+						<div>
+							<label for="predicate">Predicate</label> <select
+								id="predicate">
+								<option th:value="none" th:text="--None--"></option>
+							</select>
+						</div>
+					</div>
+					<div class="col-md-6">
+						<div th:if="${ruleStatus} != null" >
+							<div>
+								<label for="type">Rule Status</label> <select
+									id="ruleStatus">
+									<option th:each="rt: ${ruleStatus}" th:value="${rt.key}"
+										th:text="${rt.value}"></option>
+								</select>
+							</div>
+						</div>
+						<div>
+							<label for="humanConfidence">Human Confidence</label> <span>
+								from </span><input type="number" step="0.01"
+								id="humanConfidenceFrom" maxlength="4" size="4"
+								placeholder="0.0" min="0" max="1" /> <span> to </span><input
+								type="number" step="0.01" id="humanConfidenceTo"
+								maxlength="4" size="4" placeholder="1.0" min="0" max="1" />
+						</div>
+						
+						<div>
+							<label for="modifyDate">Last updated date</label> <span> from </span>
+							<input type="date" id="modifiedDateFrom" /> to 
+							<input type="date" id="modifiedDateTo" />
+						</div>
+					</div>
+					
+					<div class="col-md-1">
+						<button type="submit" id="btn-search"
+							class="btn btn-primary btn-sm">Apply</button>
+					</div>
+				</div>
+			</div>
+		</form>
+		<!-- Criteria form -->
+
+		<!-- Message -->
+		<div id="appMsg"></div>
+		<!-- Message -->
+
+		<!-- Results block -->
+		<div id="resultsBlock" style="display: none">
+			<hr />
+			<table id="results-table" class="display" style="width: 100%">
+				<thead>
+					<tr>
+						<th></th>
+						<th>Type</th>
+						<th>Rule</th>
+						<th>Quality Evaluation</th>
+						<th>Human Confidence</th>
+						<th>Computed Confidence</th>
+						<th>Operation</th>
+					</tr>
+				</thead>
+			</table>
+		</div>
+		<!-- Results block -->
+		
+	</div>
+
+
+	<div id="rule-details"></div>
+	
+	<!-- footer -->
+	<div th:replace="fragments :: footer"></div>
+	<!-- JS load -->
+	<script th:replace="fragments :: js-load"></script>
+	
+	<!--  custom js -->
+	<script type="text/javascript" th:src="@{/app_rule.js}"></script>
+	
+</body>
+</html>

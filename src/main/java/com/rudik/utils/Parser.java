@@ -11,6 +11,8 @@ import java.util.regex.Matcher;
 import com.rudik.model.Atom;
 import com.rudik.model.Rule;
 
+import asu.edu.rule_miner.rudik.model.horn_rule.RuleAtom;
+
 public final class Parser {
 	public static Map<String,String> PREFIX = new HashMap<String, String>() {{
     	put("dbo:", "http://dbpedia.org/ontology/");
@@ -25,7 +27,7 @@ public final class Parser {
      */
 	public static Rule amie_to_rudik(String knowledge_base, String amie_rule) throws Exception {
 		
-    	Rule rule = new Rule("amie");
+    	Rule rule = new Rule();
     	rule.setKnowledge_base(knowledge_base);
     	rule.setRule_type(true);
     	
@@ -107,19 +109,56 @@ public final class Parser {
 		
     	Set<Atom> atoms_premise = new HashSet<Atom>();
     	for (String atom_str : premise.split("&")) {
-    		atom_str = atom_str.trim();
-    		String atom_pattern_str = "(.+)\\((.+)\\,(.+)\\)";
-    		Pattern atom_pattern = Pattern.compile(atom_pattern_str);
-    		Matcher atom_matcher = atom_pattern.matcher(atom_str);
+    		try {
+    			Atom a = str_to_atom(atom_str);
+    			atoms_premise.add(a);
+    		} catch(Exception e) {
+    			throw new Exception("Cannot convert premise to atoms");
+    		}
     		
-    		if(atom_matcher.find()) {
-    			Atom a = new Atom(atom_matcher.group(2), atom_matcher.group(1), atom_matcher.group(3));
-        		atoms_premise.add(a);
-    		} 
+//    		atom_str = atom_str.trim();
+//    		String atom_pattern_str = "(.+)\\((.+)\\,(.+)\\)";
+//    		Pattern atom_pattern = Pattern.compile(atom_pattern_str);
+//    		Matcher atom_matcher = atom_pattern.matcher(atom_str);
+//    		
+//    		if(atom_matcher.find()) {
+//    			Atom a = new Atom(atom_matcher.group(2), atom_matcher.group(1), atom_matcher.group(3));
+//        		atoms_premise.add(a);
+//    		} 
     	}
 		
 		return atoms_premise;
 		
+	}
+	
+	public static Atom str_to_atom(String atom_str) throws Exception {
+		
+    	Atom atom = new Atom();
+    	
+    	atom_str = atom_str.trim();
+		String atom_pattern_str = "(.+)\\((.+)\\,(.+)\\)";
+		Pattern atom_pattern = Pattern.compile(atom_pattern_str);
+		Matcher atom_matcher = atom_pattern.matcher(atom_str);
+		
+		if(atom_matcher.find()) {
+			atom = new Atom(atom_matcher.group(2), atom_matcher.group(1), atom_matcher.group(3));
+		} else {
+			throw new Exception("Cannot convert string to atom");
+		}
+		
+		return atom;
+		
+	}
+	
+	public static String atoms_to_str(Set<Atom> atoms) {
+		String str = "";
+		String sep = "";
+        for (Atom atom : atoms) {
+        	String tmp = sep + atom.toString();
+        	str += tmp;
+        	sep = " & ";
+        }
+        return str;
 	}
 	
 	public static Boolean is_premise(String premise) throws Exception {

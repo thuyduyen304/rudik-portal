@@ -19,7 +19,7 @@ public class InstanceDALImpl implements InstanceDAL {
 
 	@Override
 	public List<Instance> getAllInstances() {
-		return mongoTemplate.findAll(Instance.class, "sample_instances");
+		return mongoTemplate.findAll(Instance.class);
 	}
 
 	@Override
@@ -30,15 +30,15 @@ public class InstanceDALImpl implements InstanceDAL {
 	}
 
 	@Override
-	public List<Instance> getInstanceByRuleId(String rule_id, String collection) {
+	public List<Instance> getInstanceByRuleId(String rule_id) {
 		Query query = new Query();
 		query.addCriteria(Criteria.where("ruleId").is(rule_id));
-		return mongoTemplate.find(query, Instance.class, collection);
+		return mongoTemplate.find(query, Instance.class);
 	}
 	
 	@Override
-	public Instance addNewInstance(Instance inst, String collection) {
-		mongoTemplate.save(inst, collection);
+	public Instance addNewInstance(Instance inst) {
+		mongoTemplate.save(inst);
 		return inst;
 	}
 	
@@ -50,13 +50,13 @@ public class InstanceDALImpl implements InstanceDAL {
 		if(changes.getLabel() != null)
 			instance.setLabel(changes.getLabel());
 		
-		mongoTemplate.save(instance, "sample_instances");
+		mongoTemplate.save(instance);
 		return instance;
 	}
 	
 	@Override
 	public Instance updateInstance(Instance inst) {
-	    this.mongoTemplate.save(inst, "sample_instances");
+	    this.mongoTemplate.save(inst);
 	    return inst;
 	}
 	

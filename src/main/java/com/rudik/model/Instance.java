@@ -1,12 +1,12 @@
 package com.rudik.model;
 
-import java.util.List;
+import java.util.Set;
 
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;
 import org.springframework.data.mongodb.core.mapping.Field;
 
-//@Document(collection="sample_instances")
+@Document(collection="sample_instances")
 public class Instance {
 	@Id
     private String instanceId;
@@ -27,7 +27,7 @@ public class Instance {
 	private Integer hashcode;
 	
 	@Field("premise_triples")
-	private List<Atom> premiseTriples;
+	private Set<Atom> premiseTriples;
 	
 	@Field("conclusion_triple")
 	private Atom conclusionTriple;
@@ -73,11 +73,11 @@ public class Instance {
 		return hashcode;
 	}
 	
-	public void setPremiseTriples(List<Atom> premise_triples) {
+	public void setPremiseTriples(Set<Atom> premise_triples) {
 		premiseTriples = premise_triples;
 	}
 	
-	public List<Atom> getPremiseTriples() {
+	public Set<Atom> getPremiseTriples() {
 		return premiseTriples;
 	}
 	
@@ -133,7 +133,7 @@ public class Instance {
     public int hashCode() {
     	final int prime = 31;
 		int result = 1;
-		result = prime * result + ((predicate == null) ? 0 : predicate.hashCode());
+		result = prime * result + ((predicate == null) ? 0 : predicate.toLowerCase().hashCode());
 		result = prime * result + ((premiseTriples == null || premiseTriples.size() == 0) ? 0 : premiseTriples.hashCode());
 
 		return result;

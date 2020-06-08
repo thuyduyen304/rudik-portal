@@ -1,0 +1,122 @@
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+<title>All Rules</title>
+<!-- CSS load -->
+<link th:replace="fragments :: css-load"></link>
+<!-- CSS load -->
+
+</head>
+<body>
+	<!-- Navigation bar -->
+	<div th:replace="fragments :: navbar"></div>
+	<!-- Navigation bar -->
+
+	<div class="wrapper">
+		<h2>Add Rule</h2>
+		<em class="small">Add a new rule. New rules need to be approved by administrators.
+		</em>
+		<hr />
+		<!-- Criteria form -->
+		<form action="/rules/add" method="post"
+			id="add-form">
+			
+			<div class="container">
+				<div class="row">
+					<div id="form-error" >
+			
+					</div>
+					<div id="rule-details"></div>
+					<div class="col-md-6">
+						<div>
+							<label for="knowledgeBase">Knowledge Base</label> <select
+								id="knowledge_base" required>
+								<option th:value="none" th:text="--None--"></option>
+								<option th:each="kb: ${knowledge_bases}" th:value="${kb.key}"
+									th:text="${kb.value}"></option>
+							</select>
+						</div>
+						<div>
+							<label for="sparql_endpoint">Sparql endpoint </label>
+							<input size="57" type="text" id="sparql_endpoint" value="http//localhost:8890/sparql"></input>
+						</div>
+						<div>
+							<label for="graph_iri">Graph IRI </label>
+							<input size="64" type="text" id="graph_iri" placeholder="http://dbpedia.org"></input>
+						</div>
+						<!-- <div>
+							<label for="predicate">Predicate</label> <select
+								th:field="*{predicate}">
+								<option th:value="none" th:text="--None--"></option>
+							</select>
+						</div> -->
+						<div>
+							
+							<div class="ui-widget">
+								<label for="predicate">Predicate</label>
+								<input id="predicate" type="text" size="64" required>
+							</div>
+						</div>
+					</div>
+					<div class="col-md-4">
+						<div>
+							<label for="type">Rule Type</label> <select
+								id="rule_type" required>
+								<option th:each="rt: ${rule_types}" th:value="${rt.key}"
+									th:text="${rt.value}"></option>
+							</select>
+						</div>
+
+					</div>
+					<div class="col-md-12">
+						<label for="type">Premise</label>
+		                <div class="input-premise">
+		                	<textarea class="form-control premises" id="premise" rows="5" cols="30" required></textarea>	    	
+		                </div>
+			            <div><i>Ex: http://dbpedia.org/ontology/birthDate(object,v0) &amp; =(v0,v1) &amp; http://dbpedia.org/ontology/birthDate(subject,v1)</i></div>
+		            </div>
+		            
+		            <div class="col-md-12">
+						<div>
+							<label for="type">Human Confidence</label> 
+							<input id="human_confidence" required></input><i> Fill the value from 0 to 1.</i>
+						</div>
+						
+						<div>
+							<label for="type">Quality Evaluation</label> 
+							<input id="quality_evaluation" required></input><i> Fill the value from 1, 2, 3, 4, 5.</i>
+						</div>
+
+					</div>		    
+				    
+				    <div class="col-md-12">
+						<button type="button" id="btn-check-score"
+							class="btn btn-primary btn-sm">Compute Confidence</button>						
+					</div>
+					
+					<div class="col-md-12" id="resultMessages" style="display: none">
+						<div class="resultMessages" id="computedConfidence">0.24234234234</div>
+						<button type="submit" id="btn-add-rule"
+							class="btn btn-primary btn-sm">Add Rule</button>
+					</div>
+					
+				</div>
+			</div>
+		</form>
+		<!-- Results block -->
+		<div id="resultsBlock"></div>
+		
+	</div>
+
+
+	<div id="rule-details"></div>
+	
+	<!-- footer -->
+	<div th:replace="fragments :: footer"></div>
+	<!-- JS load -->
+	<div th:replace="fragments :: js-load"></div>
+	
+	<!--  custom js -->
+	<script type="text/javascript" th:src="@{/add_rule.js}"></script>
+	
+</body>
+</html>

@@ -8,7 +8,8 @@ $(document).ready(
                         .ajax({
                             type: "GET",
                             contentType: "application/json",
-                            url: "/api/rules/" + knowledge_base + "/predicates",
+                            url: "/api/predicates",
+                            data: {"knowledge_base": knowledge_base},
                             dataType: 'json',
                             cache: false,
                             timeout: 600000,
@@ -104,7 +105,7 @@ $(document).ready(
     	                autoOpen: false,
     	                resizable: false,
     	                position: {
-    	                    my: "center top",
+//    	                    my: "top",
     	                    at: "center",
     	                    of: window
     	                },
@@ -147,13 +148,13 @@ $(document).ready(
             var table = $("#results-table").DataTable();
             idx = table.cell(this.parentNode).index();
             row_data = table.rows(idx.row).data();
-            var params = {}
-            params = row_data[0].status;
+            var params = {};
+            params = row_data[0].status == true ? false : true;
             
             $.ajax({
                 type: "PUT",
                 contentType: "application/json",
-                url: "/api/rules/approve/" + row_data[0].ruleId,
+                url: "/api/rules/" + row_data[0].ruleId + "/status",
                 data: JSON.stringify(params),
                 dataType: 'json',
                 cache: false,
@@ -183,21 +184,23 @@ $(document).ready(
 function search_rules_submit() {
 
     var search = {}
-    search["knowledgeBase"] = $("#knowledgeBase").val();
-    search["predicate"] = $("#predicate").val();
-    search["ruleType"] = $("#ruleType").val();
-    search["ruleStatus"] = $("#ruleStatus").val();
-    search["humanConfidenceFrom"] = $("#humanConfidenceFrom").val();
-    search["humanConfidenceTo"] = $("#humanConfidenceTo").val();
+    search["knowledge_base"] = $("#knowledgeBase").val() == 'none' ? '' : $("#knowledgeBase").val();
+    search["predicate"] = $("#predicate").val() == 'none' ? '' : $("#predicate").val();
+    search["type"] = $("#ruleType").val() == -1 ? '' : $("#ruleType").val();
+    search["status"] =  $("#ruleStatus").val() == -1 ? '' : $("#ruleStatus").val();
+    search["human_confidence_from"] = $("#humanConfidenceFrom").val();
+    search["huma_confidence_to"] = $("#humanConfidenceTo").val();
+    search["modified_date_from"] = $("#modifiedDateFrom").val();
+    search["modified_date_to"] = $("#modifiedDateTo").val();
 
     $("#btn-search").prop("disabled", true);
 
     $.ajax({
-        type: "POST",
+        type: "GET",
         contentType: "application/json",
-        url: "/api/rules/rule-approve",
-        data: JSON.stringify(search),
-        dataType: 'json',
+        url: "/api/rules",
+        data: search,
+//        dataType: 'json',
         cache: false,
         timeout: 600000,
         success: function(data) {
@@ -246,7 +249,7 @@ function search_rules_submit() {
                                         trim_prefix(row.conclusion) + ' \u21D2 ' +
                                         ' \u22A5 ';
                                 }
-                                data = '<a class="popup-opener" data-rule-id="' + row.ruleId + '" href="#">' + data + '</a>';
+                                data = '<a class="popup-opener" data-rule-id="' + row.ruleId + '">' + data + '</a>';
                             }
 
                             return data;
@@ -294,7 +297,7 @@ function search_rules_submit() {
                                 } else {
                                 	data = '<a class="rule-op btn btn-sm" role="button">Approve</a>';
                                 }
-                            	data += '<a class="btn btn-sm btn-info btn-eval" role="button" target="_blank" href="/rule_sample/' + row.ruleId + '">Evaluate</a>';
+                            	data += '<a class="btn btn-sm btn-info btn-eval" role="button" target="_blank" href="/rules/' + row.ruleId + '/sample-instances">Evaluate</a>';
                             }
                             return data;
                         }
@@ -324,8 +327,8 @@ function search_rules_submit() {
                                     $.ajax({
                                         type: "PUT",
                                         contentType: "application/json",
-                                        url: "/api/rules/change-status/true",
-                                        data: JSON.stringify(export_data),
+                                        url: "/api/rules/batch/status",
+                                        data: JSON.stringify({"ids": export_data, "status": true}),
                                         dataType: 'json',
                                         cache: false,
                                         timeout: 600000,
@@ -333,7 +336,7 @@ function search_rules_submit() {
                                         	table.rows({
                                                 selected: true
                                             }).every(function( rowIdx, tableLoop, rowLoop) {
-                                            	if (modified_rule.status == true) {
+                                            	if (modified_rule.includes(this.data().ruleId)) {
                                             		table.cell(rowIdx, 6).data(true);
                                             	}
                                             });
@@ -363,8 +366,8 @@ function search_rules_submit() {
                                     $.ajax({
                                         type: "PUT",
                                         contentType: "application/json",
-                                        url: "/api/rules/change-status/false",
-                                        data: JSON.stringify(export_data),
+                                        url: "/api/rules/batch/status",
+                                        data: JSON.stringify({"ids": export_data, "status": false}),
                                         dataType: 'json',
                                         cache: false,
                                         timeout: 600000,
@@ -372,7 +375,7 @@ function search_rules_submit() {
                                         	table.rows({
                                                 selected: true
                                             }).every(function( rowIdx, tableLoop, rowLoop) {
-                                            	if (modified_rule.status == false) {
+                                            	if (modified_rule.includes(this.data().ruleId)) {
                                             		table.cell(rowIdx, 6).data(false);
                                             	}
                                             });
@@ -447,23 +450,17 @@ function search_rules_submit() {
     });
 }
 
-function trim_prefix(str) {
-    p1 = "http://dbpedia.org/ontology/";
-    p2 = "http://yago-knowledge.org/resource/";
-    p3 = "http://www.wikidata.org/prop/direct/";
-    return str.replace(new RegExp(p1 + '|' + p2 + '|' + p3, 'g'), "");
-}
-
 function add_input_elm(idx, id, value) {
     var html = "<div>";
-    html += "<form id='form-rule-edit-" + id + "' action='/api/rules/" + id + "' method='put'>";
     if(idx.column == 3) {
     	if(value == null)
     		value = 3;
+    	html += "<form id='form-rule-edit-" + id + "' action='/api/rules/" + id + "/quality-evaluation' method='put'>";
     	html += "<input id='ejbeatycelledit' name='qualityEvaluation' type='number' placeholder='3' min='1' max='5' value='" + value + "'></input>";
     } else if (idx.column == 4) {
     	if(value == null)
     		value = 0.0;
+    	html += "<form id='form-rule-edit-" + id + "' action='/api/rules/" + id + "/human-confidence' method='put'>";
     	html += "<input id='ejbeatycelledit' name='humanConfidence' type='number' step='0.01' min='0' max='1' " +
     			"maxlength='4' size='4' placeholder='0.0' value='" + value + "'></input>";
     }

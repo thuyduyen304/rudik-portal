@@ -8,7 +8,8 @@ $(document).ready(
                             .ajax({
                                 type: "GET",
                                 contentType: "application/json",
-                                url: "/api/rules/" + knowledge_base + "/predicates",
+                                url: "/api/predicates",
+                                data: {"knowledge_base": knowledge_base},
                                 dataType: 'json',
                                 cache: false,
                                 timeout: 600000,
@@ -35,34 +36,55 @@ $(document).ready(
                     });
         
         //attach autocomplete
-        $("#predicate").autocomplete({
-            minLength: 0,
-            delay: 500,
-            //define callback to format results
-            source: function (request, response) {
-            	knowledge_base = $("#knowledge_base").val();
-                $.getJSON("/api/rules/" + knowledge_base + "/predicates", request, function(result) {
-                    response($.map(result, function(item) {
-                        return {
-                            label: item,
-                            value: item,
-                        }
-                    }));
+        var all_predicates = [];
+        $.ajax({
+            type: "GET",
+            contentType: "application/json",
+            url: "/api/predicates",
+            dataType: 'json',
+            cache: false,
+            timeout: 600000,
+            success: function(data) {
+                all_predicates = data;
+                $("#predicate").autocomplete({
+                    source: all_predicates
                 });
             },
+            error: function(e) {
+                console.log("ERROR : ",
+                    e);
 
-            //define select handler
-            select : function(event, ui) {
-            	console.log(ui);
-                if (ui.item) {
-                    event.preventDefault();
-//                    var defValue = $("#predicate2").prop('defaultValue');
-                    $("#predicate").val(ui.item.value);
-                    $("#predicate").blur();
-                    return false;
-                }
             }
         });
+        
+//        $("#predicate").autocomplete({
+//            minLength: 3,
+//            delay: 500,
+//            //define callback to format results
+//            source: function (request, response) {
+//            	knowledge_base = $("#knowledge_base").val();
+//                $.getJSON("/api/rules/" + knowledge_base + "/predicates", request, function(result) {
+//                    response($.map(result, function(item) {
+//                        return {
+//                            label: item,
+//                            value: item,
+//                        }
+//                    }));
+//                });
+//            },
+//
+//            //define select handler
+//            select : function(event, ui) {
+//            	console.log(ui);
+//                if (ui.item) {
+//                    event.preventDefault();
+////                    var defValue = $("#predicate2").prop('defaultValue');
+//                    $("#predicate").val(ui.item.value);
+//                    $("#predicate").blur();
+//                    return false;
+//                }
+//            }
+//        });
         
         // Add premise.
         var next = 0
@@ -104,7 +126,7 @@ $(document).ready(
             	$.ajax({
         	        type: "POST",
         	        contentType: "application/json",
-        	        url: "/api/rules/get-score",
+        	        url: "/api/rules/computed-confidence",
         	        data: JSON.stringify(add),
         	        dataType: 'json',
         	        cache: false,
@@ -114,10 +136,10 @@ $(document).ready(
         	            $("#btn-add-rule").prop("disabled", false);
         	            var status = Object.keys(data[0])[0];
         	            if (status == 'exist') {
-        	            	var title = "Rule is exist. Adding rule is not successfully";
+        	            	var title = "Rule exists. Adding rule is not successfully";
         	            }
         	            else if (status == 'invalid') {
-        	            	var title = "Premise is wrong format.";
+        	            	var title = "Premise is in a wrong format.";
         	            }
         	            else {
         	            	$("#resultMessages").css("display", "block");
@@ -190,7 +212,7 @@ function add_rule_submit() {
 	    $.ajax({
 	        type: "POST",
 	        contentType: "application/json",
-	        url: "/api/rules/add-rule",
+	        url: "/api/rules",
 	        data: JSON.stringify(add),
 	        dataType: 'json',
 	        cache: false,
@@ -274,15 +296,15 @@ function add_rule_submit() {
 function validation() {
 	var message = '';
     var add = {}
-    if ($("#ruleType").val() == -1) {
+    if ($("#rule_type").val() == -1) {
     	message += '<li>Choose the Rule Type.</li>';
     }
     add["knowledge_base"] = $("#knowledge_base").val();
-    add["predicate"] = $("#predicate").val();
+    add["predicate"] = $("#predicate").val().trim();
     add["rule_type"] = $("#rule_type").val() == 1 ? true : false;
-    add["premise"] = $("#premise").val();
-    add["human_confidence"] = $("#human_confidence").val();
-    add["quality_evaluation"] = $("#quality_evaluation").val();
+    add["premise"] = $("#premise").val().trim();
+    add["human_confidence"] = $("#human_confidence").val().trim();
+    add["quality_evaluation"] = $("#quality_evaluation").val().trim();
     add["computed_confidence"] = $("#computed_confidence").text();
 
     if (add["knowledge_base"] == 'none') {    	

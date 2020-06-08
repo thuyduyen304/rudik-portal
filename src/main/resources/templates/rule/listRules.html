@@ -1,0 +1,112 @@
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+<title>All Rules</title>
+<!-- CSS load -->
+<link th:replace="fragments :: css-load"></link>
+<!-- CSS load -->
+
+</head>
+<body>
+	<!-- Navigation bar -->
+	<div th:replace="fragments :: navbar"></div>
+	<!-- Navigation bar -->
+
+	<div class="wrapper">
+		<div class="alert " role="alert" style="padding-top: 0; padding-bottom: 0">
+		    <div><strong style="font-style: italic;">RuleHub</strong> manages rules for Knowledge Graphs (KG) with a database of more than 7000 rules (and growing!). <em>To browse the datasets, select the KG of interest.</em></div>
+		    <div>Users can contribute by reporting <a href="/rules/add">new rules</a> or update the ones in the database by suggesting a value between 1 and 5 for the rule quality - <em>just click the cell value to make your suggestion</em>.</div>
+		</div>
+		<div class="alert alert-info" role="alert">Horn rules stating dependencies over KG can be used for identifying errors or adding new facts. For example, the rule <em>child(object,subject) &rightarrow; parent(subject,object)</em> states that if person A is child of person B, then B is parent of A. This type of rules is called positive rules and it aims to enrich the Knowledge Bases with new facts, while the opposite type - negative rules - is used to detect errors. If a set of triples in a graph satisfies a negative rule, then there must be at least one incorrect triple among them. For example, the rule <em style=''>child(subject,object) &amp; birthYear(subject,v0) &amp; birthYear(object,v1) &amp; &gt;(v0,v1) &rightarrow; &bottom;</em> states that parents cannot be younger than their children.
+		</div>
+		<hr />
+		
+		<!-- Message -->
+		<div th:replace="fragments :: app-msg"></div>
+		<!-- Message -->
+		
+		
+		<!-- Criteria form -->
+		<form action="/rule/search" method="post"
+			id="search-form">
+
+			<div class="container">
+				<div class="row">
+					<div class="col-md-6">
+						<div>
+							<label for="knowledgeBase">Knowledge Base</label> 
+							<select id="knowledgeBase">
+								<option th:value="none" th:text="--None--"></option>
+								<option th:each="kb: ${knowledge_bases}" th:value="${kb.key}"
+									th:text="${kb.value}"></option>
+							</select>
+						</div>
+						<div>
+							<label for="predicate">Predicate</label> <select
+								id="predicate">
+								<option th:value="none" th:text="--None--"></option>
+							</select>
+						</div>
+					</div>
+					<div class="col-md-4">
+						<div>
+							<label for="type">Rule Type</label> <select
+								id="ruleType">
+								<option th:each="rt: ${rule_types}" th:value="${rt.key}"
+									th:text="${rt.value}"></option>
+							</select>
+						</div>
+						<div>
+							<label for="humanConfidence">Human Confidence</label> <span>
+								from </span><input type="number" step="0.01"
+								id="humanConfidenceFrom" maxlength="4" size="4"
+								placeholder="0.0" min="0" max="1" /> <span> to </span><input
+								type="number" step="0.01" id="humanConfidenceTo"
+								maxlength="4" size="4" placeholder="1.0" min="0" max="1" />
+						</div>
+
+					</div>
+					<div class="col-md-2">
+						<button type="submit" id="btn-search"
+							class="btn btn-primary btn-sm">Apply</button>
+					</div>
+				</div>
+			</div>
+		</form>
+		<!-- Criteria form -->
+		
+		
+
+		<!-- Results block -->
+		<div id="resultsBlock" style="display: none">
+			<hr />
+			<table id="results-table" class="display" style="width: 100%">
+				<thead>
+					<tr>
+						<th></th>
+						<th>Type</th>
+						<th>Rule</th>
+						<th>Quality Evaluation</th>
+						<th>Human Confidence</th>
+						<th>Computed Confidence</th>
+						<th>Operation</th>
+					</tr>
+				</thead>
+			</table>
+		</div>
+		<!-- Results block -->
+		
+	</div>
+
+
+	<div id="rule-details"></div>
+
+	<!-- footer -->
+	<div th:replace="fragments :: footer"></div>
+	<!-- JS load -->
+	<div th:replace="fragments :: js-load"></div>
+	
+	<!--  custom js -->
+	<script type="text/javascript" th:src="@{/main.js}"></script>
+	
+</body>
+</html>

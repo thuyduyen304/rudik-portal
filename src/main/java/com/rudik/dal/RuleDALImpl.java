@@ -2,6 +2,7 @@ package com.rudik.dal;
 
 import java.util.ArrayList;
 import java.util.Comparator;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 
@@ -38,9 +39,17 @@ public class RuleDALImpl implements RuleDAL {
 		query.addCriteria(Criteria.where("ruleId").is(ruleId));
 		return mongoTemplate.findOne(query, Rule.class);
 	}
+	
+	@Override
+	public Rule getRuleByHashcode(Integer hashcode) {
+		Query query = new Query();
+		query.addCriteria(Criteria.where("hashcode").is(hashcode));
+		return mongoTemplate.findOne(query, Rule.class);
+	}
 
 	@Override
-	public Rule addNewRule(Rule rule) {
+	public Rule saveRule(Rule rule) {
+		rule.setLast_updated(new Date());
 		mongoTemplate.save(rule);
 		return rule;
 	}
@@ -113,7 +122,6 @@ public class RuleDALImpl implements RuleDAL {
 //		query.addCriteria(Criteria.where("knowledge_base").is("dbpedia"));
 		System.out.println(query); 
 		List<Rule> test = mongoTemplate.find(query, Rule.class);
-		System.out.println(test);
 		return test;
 	}
 	
@@ -124,19 +132,19 @@ public class RuleDALImpl implements RuleDAL {
 		return mongoTemplate.find(query, Rule.class);
 	}
 
-	@Override
-	public Rule updateQualityEvaluation(String rule_id, Rule changes) {
-		
-		Query query = new Query();
-		query.addCriteria(Criteria.where("ruleId").is(rule_id));
-		Rule rule = mongoTemplate.findOne(query, Rule.class);
-		if(changes.getQuality_evaluation() != null)
-			rule.setQuality_evaluation(changes.getQuality_evaluation());
-		if(changes.getHuman_confidence() != null)
-			rule.setHuman_confidence(changes.getHuman_confidence());
-		mongoTemplate.save(rule);
-		return rule;
-	}
+//	@Override
+//	public Rule updateQualityEvaluation(String rule_id, Rule changes) {
+//		
+//		Query query = new Query();
+//		query.addCriteria(Criteria.where("ruleId").is(rule_id));
+//		Rule rule = mongoTemplate.findOne(query, Rule.class);
+//		if(changes.getQuality_evaluation() != null)
+//			rule.setQuality_evaluation(changes.getQuality_evaluation());
+//		if(changes.getHuman_confidence() != null)
+//			rule.setHuman_confidence(changes.getHuman_confidence());
+////		mongoTemplate.save(rule);
+//		return this.saveRule(rule);
+//	}
 	
 	@Override
 	public Rule updateStatus(String rule_id, Boolean changes) {
@@ -145,8 +153,7 @@ public class RuleDALImpl implements RuleDAL {
 		query.addCriteria(Criteria.where("ruleId").is(rule_id));
 		Rule rule = mongoTemplate.findOne(query, Rule.class);
 		rule.setStatus(changes);
-		mongoTemplate.save(rule);
-		return rule;
+		return this.saveRule(rule);
 	}
 
 	@Override
@@ -180,9 +187,9 @@ public class RuleDALImpl implements RuleDAL {
 	    return (Vote)this.mongoTemplate.findOne(query, Vote.class);
 	}
 	
-	@Override
-	public Rule updateRule(Rule rule) {
-	    this.mongoTemplate.save(rule);
-	    return rule;
-	}
+//	@Override
+//	public Rule updateRule(Rule rule) {
+//	    this.mongoTemplate.save(rule);
+//	    return rule;
+//	}
 }

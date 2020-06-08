@@ -8,7 +8,8 @@ $(document).ready(
                         .ajax({
                             type: "GET",
                             contentType: "application/json",
-                            url: "/api/rules/" + knowledge_base + "/predicates",
+                            url: "/api/predicates",
+                            data: {"knowledge_base": knowledge_base},
                             dataType: 'json',
                             cache: false,
                             timeout: 600000,
@@ -112,7 +113,7 @@ $(document).ready(
     	                autoOpen: false,
     	                resizable: false,
     	                position: {
-    	                    my: "center top",
+//    	                    my: "center top",
     	                    at: "center",
     	                    of: window
     	                },
@@ -155,23 +156,40 @@ $(document).ready(
             e.stopPropagation();
         });
         
-        $("#import-form").on('submit', function() {
-        	var $this = $("#import-form button[type='submit']");
-//        	var $this = $(this);
-            var loadingText = 'Importing...';
-            $this.data('original-text', $(this).html());
-            $this.html(loadingText);
-            $this.attr("disabled", "disabled")
-            
-            if ($(this).html() !== loadingText) {
-              
-            }
-          });
         
         $("#results-table").on("click", "td.dt-operator a.btn-rule-query", function() {
         	$('#rule-details').html('');
         	ruleId = this.dataset.ruleid;
-            console.log(ruleId);
+            
+        	html = '<section style="color:#333333" class="popup-rule" id="popup-rule-' + ruleId + '-query" >' +
+            '</section>';
+            $('#rule-details').html(html);
+            $('#popup-rule-' + ruleId + '-query').text("Generating query...");
+            $(".popup-rule").dialog({
+                autoOpen: false,
+                resizable: false,
+                position: {
+                    my: "center top",
+                    at: "top",
+                    of: window
+                },
+                width: $(window).width() * 0.4,
+                height: 200,
+                open: function() {
+                    $('.ui-widget-overlay').addClass('custom-overlay');
+                },
+                title: "Rule's SPARQL query",
+                show: {
+                    effect: "fade",
+                    duration: 100
+                },
+                hide: {
+                    effect: "fade",
+                    duration: 100
+                }
+            });
+            $("#popup-rule-" + ruleId + "-query").dialog("open");
+            
             $.ajax({
                 type: "GET",
                 contentType: "application/json",
@@ -181,37 +199,11 @@ $(document).ready(
                 timeout: 600000,
                 success: function(data) {
                 	console.log(data)
-		            html = '<section style="color:#333333" class="popup-rule" id="popup-rule-' + ruleId + '-query" >' +
-	                '</section>';
-		            $('#rule-details').html(html);
-		            $('#popup-rule-' + ruleId + '-query').text(data.response);
-		            $(".popup-rule").dialog({
-    	                autoOpen: false,
-    	                resizable: false,
-    	                position: {
-    	                    my: "center top",
-    	                    at: "center",
-    	                    of: window
-    	                },
-    	                width: $(window).width() * 0.4,
-    	                height: 300,
-    	                open: function() {
-    	                    $('.ui-widget-overlay').addClass('custom-overlay');
-    	                },
-    	                title: "Rule's SPARQL query",
-    	                show: {
-    	                    effect: "fade",
-    	                    duration: 100
-    	                },
-    	                hide: {
-    	                    effect: "fade",
-    	                    duration: 100
-    	                }
-    	            });
-		            $("#popup-rule-" + ruleId + "-query").dialog("open");
+                	$('#popup-rule-' + ruleId + '-query').text(data.response);
                 },
                 error: function(e) {
                 	console.log(e.responseText);
+                	$('#popup-rule-' + ruleId + '-query').text(e.responseText);
                 	var json = "<h4>Ajax Response</h4><pre>" + e.responseText + "</pre>";
 		            $('#appMsg').html(json);
                 }
@@ -224,19 +216,21 @@ $(document).ready(
 function search_rules_submit() {
 
     var search = {}
-    search["knowledgeBase"] = $("#knowledgeBase").val();
-    search["predicate"] = $("#predicate").val();
-    search["ruleType"] = $("#ruleType").val();
-    search["humanConfidenceFrom"] = $("#humanConfidenceFrom").val();
-    search["humanConfidenceTo"] = $("#humanConfidenceTo").val();
+    search["knowledge_base"] = $("#knowledgeBase").val() =="none" ?  '' : $("#knowledgeBase").val();
+    search["predicate"] = $("#predicate").val() == "none" ? '' : $("#predicate").val();
+    search["type"] = $("#ruleType").val() == -1 ? '' : $("#ruleType").val();
+    search["human_confidence_from"] = $("#humanConfidenceFrom").val();
+    search["human_confidence_to"] = $("#humanConfidenceTo").val();
+    search["status"] = 1;
 
     $("#btn-search").prop("disabled", true);
 
     $.ajax({
-        type: "POST",
+        type: "GET",
         contentType: "application/json",
         url: "/api/rules",
-        data: JSON.stringify(search),
+//        data: JSON.stringify(search),
+        data: search,
         dataType: 'json',
         cache: false,
         timeout: 600000,
@@ -329,8 +323,9 @@ function search_rules_submit() {
                         className: "dt-center dt-operator",
                         "render": function(data, type, row, meta) {
                             if (type === 'display') {
-                            	data = '<a class="btn btn-sm btn-info" role="button" href="/instance/sample?rule_id=' + row.ruleId + '" >Sample</a>';
-                                data += '<a class="btn btn-sm btn-rule-query" role="button" href="#" data-ruleid="' + row.ruleId + '">SPARQL Query</a>';
+                            	data = '<a class="btn btn-sm btn-info btn-eval" role="button" target="_blank" href="/rules/' + row.ruleId + '/sample-instances">Sample</a>';
+//                            	data = '<a class="btn btn-sm btn-info" role="button" href="/instance/sample?rule_id=' + row.ruleId + '" >Sample</a>';
+                                data += '<a class="btn btn-sm btn-rule-query" role="button" data-ruleid="' + row.ruleId + '">SPARQL Query</a>';
                             }
 
                             return data;
@@ -444,14 +439,6 @@ function search_rules_submit() {
 
         }
     });
-}
-
-function trim_prefix(str) {
-    p1 = "http://dbpedia.org/ontology/";
-    p2 = "http://yago-knowledge.org/resource/";
-    p3 = "http://www.wikidata.org/prop/direct/";
-//    return str.replaceAll({p1: '', p2: ''});
-    return str.replace(new RegExp(p1 + '|' + p2 + '|' + p3, 'g'), "");
 }
 
 function add_input_elm(idx, id, value) {
