@@ -103,15 +103,17 @@ public class RuleRestController {
     	try {
     		human_confidence_from = Double.parseDouble(search_criteria.get("human_confidence_from"));
     	} catch(Exception e) {
-    		human_confidence_from = 0.0;
+//    		human_confidence_from = 0.0;
     	}
     	try {
     		human_confidence_to = Double.parseDouble(search_criteria.get("human_confidence_to"));
     	} catch(Exception e) {
-    		human_confidence_to = 1.0;
+//    		human_confidence_to = 1.0;
     	}
-    	if(human_confidence_from > 0 || human_confidence_to < 1) {
-    		Double[] human_confidence_value = new Double[]{human_confidence_from, human_confidence_to};
+    	if(human_confidence_from != null || human_confidence_to != null) {
+    		Double[] human_confidence_value = new Double[]{
+    				human_confidence_from != null ? human_confidence_from : 0, 
+    						human_confidence_to != null ? human_confidence_to : 1};
     		criteria.add(new HashMap<String, Object>()
 			{{
 			     put("field", "human_confidence");
