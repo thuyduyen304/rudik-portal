@@ -15,6 +15,8 @@
 		<div class="alert " role="alert" style="padding-top: 0; padding-bottom: 0">
 		    <div><strong style="font-style: italic;">RuleHub</strong> manages rules for Knowledge Graphs (KG) with a database of more than 7000 rules (and growing!). <em>To browse the datasets, select the KG of interest.</em></div>
 		    <div>Users can contribute by reporting <a href="/rules/add">new rules</a> or update the ones in the database by suggesting a value between 1 and 5 for the rule quality - <em>just click the cell value to make your suggestion</em>.</div>
+		    <br />
+		    <em>If you use RuleHub in a scientific publication, please cite <a href="https://dl.acm.org/doi/abs/10.1145/3409384">this paper.</a></em>
 		</div>
 		<div class="alert alert-info" role="alert">Horn rules stating dependencies over KG can be used for identifying errors or adding new facts. For example, the rule <em>child(object,subject) &rightarrow; parent(subject,object)</em> states that if person A is child of person B, then B is parent of A. This type of rules is called positive rules and it aims to enrich the Knowledge Bases with new facts, while the opposite type - negative rules - is used to detect errors. If a set of triples in a graph satisfies a negative rule, then there must be at least one incorrect triple among them. For example, the rule <em style=''>child(subject,object) &amp; birthYear(subject,v0) &amp; birthYear(object,v1) &amp; &gt;(v0,v1) &rightarrow; &bottom;</em> states that parents cannot be younger than their children.
 		</div>
